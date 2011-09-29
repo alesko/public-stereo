@@ -34,19 +34,36 @@
  *
  *********************************************************************/
 
-
-#ifndef DARWIN
+#include <cassert>
+#include <iostream>
+#include <stdio.h>
+#include <time.h>
+#include <sys/time.h>
+#ifdef DARWIN
 #include <opencv2/opencv.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/core/core.hpp>
-#include <opencv2/core/core.hpp>
-#endif
-#include <iostream>
-#include <cassert>
+#endif 
+#ifdef LINUX
+#include <cv.h>
+#include <highgui.h>
+#endif 
+
+
 
 using namespace std;
 using namespace cv;
 
+double GetRunTime(void)
+{
+   double sec = 0;
+   struct timeval tp;
+
+   gettimeofday(&tp,NULL);
+   sec = tp.tv_sec + tp.tv_usec / 1000000.0;
+
+   return(sec);
+}
 
 
 int main (int argc, char * const argv[]) {
@@ -57,11 +74,13 @@ int main (int argc, char * const argv[]) {
 	CvCapture* capture_right = cvCreateFileCapture( argv[2] );
 	double fps = cvGetCaptureProperty(capture_left,CV_CAP_PROP_FPS);
 	int wait_time= (int)1000.0/fps;
+	double tstart, t_elaps;
 	
 	IplImage* frame_l;
+	IplImage* frame_r;
 	IplImage* dest_l;
 	IplImage* dest_r;
-	IplImage* frame_r;
+	
 	
 	CvScalar red = CV_RGB(250,0,0);
 	CvScalar blue = CV_RGB(0,0,250);
@@ -79,17 +98,17 @@ int main (int argc, char * const argv[]) {
 	
 	
 	while(1) {		
-		i++;
+		
 		//const char* text = "Left video";
 		//sprintf( text, "Frame number: %d", i );
+		tstart = GetRunTime();
 		frame_l = cvQueryFrame( capture_left );
 		frame_r = cvQueryFrame( capture_right );
 		if (i == 0)
 		{
-
 		    // Create a new 3 channel image
 	 	    dest_l = cvCreateImage( cvSize(2*(frame_l->width),2*(frame_l->height)), 8, 3 );
-			dest_r = cvCreateImage( cvSize(2*(frame_r->width),2*(frame_r->height)), 8, 3 );
+		    dest_r = cvCreateImage( cvSize(2*(frame_r->width),2*(frame_r->height)), 8, 3 );
 		}
 		cvResize(frame_l, dest_l);
 		cvResize(frame_r, dest_r);
@@ -99,8 +118,8 @@ int main (int argc, char * const argv[]) {
 		cvShowImage( "Left", dest_l );
 		if( !frame_r ) break;
 		cvShowImage( "Right", dest_r );
-		
-		char c = cvWaitKey(1); // Determines the framerate
+		t_elaps = 0.001*(GetRunTime()-tstart); // Convert to msec
+		char c = cvWaitKey(wait_time-t_elaps); // Determines the framerate
 		if( c == 27 ) break;
 		if( c == 32 )
 		{
@@ -109,6 +128,7 @@ int main (int argc, char * const argv[]) {
 				c = cvWaitKey(250);
 			}
 		}
+		i++;
 	}
 	cvReleaseCapture( &capture_left );
 	cvReleaseCapture( &capture_right );
