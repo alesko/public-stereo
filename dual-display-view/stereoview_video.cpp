@@ -69,7 +69,9 @@ double GetRunTime(void)
 int main (int argc, char * const argv[]) {
 	
 	cvNamedWindow( "Left", CV_WINDOW_AUTOSIZE );
+	cvMoveWindow("Left",00,00);
 	cvNamedWindow( "Right", CV_WINDOW_AUTOSIZE );
+	cvMoveWindow("Right",1280,00);
 	CvCapture* capture_left = cvCreateFileCapture( argv[1] );
 	CvCapture* capture_right = cvCreateFileCapture( argv[2] );
 	double fps = cvGetCaptureProperty(capture_left,CV_CAP_PROP_FPS);
@@ -94,41 +96,50 @@ int main (int argc, char * const argv[]) {
 	//char text[100];
 	int i=0;
 	CvPoint pt = cvPoint(10,30);
-	
-	
+	double scale=3.6;
 	
 	while(1) {		
-		
-		//const char* text = "Left video";
-		//sprintf( text, "Frame number: %d", i );
-		tstart = GetRunTime();
-		frame_l = cvQueryFrame( capture_left );
-		frame_r = cvQueryFrame( capture_right );
-		if (i == 0)
-		{
-		    // Create a new 3 channel image
-	 	    dest_l = cvCreateImage( cvSize(2*(frame_l->width),2*(frame_l->height)), 8, 3 );
-		    dest_r = cvCreateImage( cvSize(2*(frame_r->width),2*(frame_r->height)), 8, 3 );
-		}
-		cvResize(frame_l, dest_l);
-		cvResize(frame_r, dest_r);
-		//cvPutText(frame_l, text, pt, &font1, red);
-		//cvPutText(frame_r, text, pt, &font1, blue);
-		if( !frame_l ) break;
-		cvShowImage( "Left", dest_l );
-		if( !frame_r ) break;
-		cvShowImage( "Right", dest_r );
-		t_elaps = 0.001*(GetRunTime()-tstart); // Convert to msec
-		char c = cvWaitKey(wait_time-t_elaps); // Determines the framerate
-		if( c == 27 ) break;
-		if( c == 32 )
-		{
-			c = 0;
-			while(c != 32 && c != 27){
-				c = cvWaitKey(250);
-			}
-		}
-		i++;
+	  //const char* text = "Left video";
+	  //sprintf( text, "Frame number: %d", i );
+	  tstart = GetRunTime();
+	  
+	  frame_l = cvQueryFrame( capture_left );
+	  frame_r = cvQueryFrame( capture_right );
+	  if (i == 0)
+	    {
+	      // Create a new 3 channel image
+	      dest_l = cvCreateImage( cvSize(scale*(frame_l->width),scale*(frame_l->height)), 8, 3 );
+	      dest_r = cvCreateImage( cvSize(scale*(frame_r->width),scale*(frame_r->height)), 8, 3 );
+	    }
+	  cvResize(frame_l, dest_l);
+	  cvResize(frame_r, dest_r);
+	  //cvPutText(frame_l, text, pt, &font1, red);
+	  //cvPutText(frame_r, text, pt, &font1, blue);
+	  if( !frame_l ) break;
+	  cvShowImage( "Left", dest_l );
+	  if( !frame_r ) break;
+	  cvShowImage( "Right", dest_r );
+	  t_elaps = 0.001*(GetRunTime()-tstart); // Convert to msec
+	  cout << "Fps:" << fps << "\tWaittime: " << wait_time << "\telaps:" << t_elaps<< endl;
+	  char c = cvWaitKey(wait_time-t_elaps); // Determines the framerate
+	  if( c == 27 ) break;
+	  if( c == 32 )
+	    {
+	      c = 0;
+	      while(c != 32 && c != 27){
+		c = cvWaitKey(250);
+	      }
+	    }
+	  if( c == 43 )
+	    {
+	      scale = scale + 0.1;
+	    }
+	  if( c == 45 )
+	    {
+	      scale = scale - 0.1;
+	    }
+	  
+	  i++;
 	}
 	cvReleaseCapture( &capture_left );
 	cvReleaseCapture( &capture_right );
