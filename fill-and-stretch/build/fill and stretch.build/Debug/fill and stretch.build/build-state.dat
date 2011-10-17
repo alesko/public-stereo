@@ -1,0 +1,151 @@
+Tfill and stretch
+v7
+r0
+t340532437.012149
+cCheck dependencies
+cCompileC "build/fill and stretch.build/Debug/fill and stretch.build/Objects-normal/x86_64/main.o" /Users/asd/SourceCode/private-stereo/fill-and-stretch/main.cpp normal x86_64 c++ com.apple.compilers.gcc.4_2
+cLd "/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/Debug/fill and stretch" normal x86_64
+
+N/Developer/SDKs/MacOSX10.6.sdk
+c000000004A769DAB00000000000000EE
+t1249287595
+s238
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/include/math.h
+c000000004A5C14A000000000000004F1
+t1247548576
+s1265
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_calib3d.dylib
+c000000004E60BC9E00000000000B2990
+t1314962590
+s731536
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_contrib.dylib
+c000000004E60BC9F00000000000634E8
+t1314962591
+s406760
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_core.dylib
+c000000004E60BC9E0000000000220060
+t1314962590
+s2228320
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_features2d.dylib
+c000000004E60BC9E00000000001055B0
+t1314962590
+s1070512
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_flann.dylib
+c000000004E60BC9E000000000008D468
+t1314962590
+s578664
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_gpu.dylib
+c000000004E60BC9F0000000000021840
+t1314962591
+s137280
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_highgui.dylib
+c000000004E60BC9E000000000009BA00
+t1314962590
+s637440
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_imgproc.dylib
+c000000004E60BC9E00000000001FEC90
+t1314962590
+s2092176
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_legacy.dylib
+c000000004E60BC9E00000000000BEED0
+t1314962590
+s782032
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_ml.dylib
+c000000004E60BC9F0000000000079B40
+t1314962591
+s498496
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_objdetect.dylib
+c000000004E60BC9F0000000000063208
+t1314962591
+s406024
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_ts.dylib
+c000000004E60BC9E00000000000923B0
+t1314962590
+s598960
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_video.dylib
+c000000004E60BC9F0000000000044210
+t1314962591
+s279056
+
+N/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/Debug/fill and stretch
+t1318839637
+s17048
+
+N/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/fill and stretch.build/Debug/fill and stretch.build/Objects-normal/x86_64/fill and stretch.LinkFileList
+c000000004E9BE553000000000000008D
+t1318839635
+s141
+
+N/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/fill and stretch.build/Debug/fill and stretch.build/Objects-normal/x86_64/main.o
+t1318839636
+s104556
+
+N/Users/asd/SourceCode/private-stereo/fill-and-stretch/main.cpp
+c000000004E9455020000000000000F59
+t1318343938
+s3929
+i<iostream>
+i<opencv2/highgui/highgui.hpp>
+i<opencv2/opencv.hpp>
+i<opencv2/highgui/highgui.hpp>
+i<opencv2/core/core.hpp>
+i<opencv2/core/core.hpp>
+i<math.h>
+i<cassert>
+
+N/usr/local/include/opencv2/core/core.hpp
+c000000004E4929760000000000029BC7
+t1313417590
+s170951
+
+N/usr/local/include/opencv2/highgui/highgui.hpp
+c000000004E37F2270000000000001C73
+t1312289319
+s7283
+
+N/usr/local/include/opencv2/opencv.hpp
+c000000004E37F20A0000000000000A9C
+t1312289290
+s2716
+
+CCheck dependencies
+r0
+lSLF07#2@18"Check dependencies340532435#340532435#0(0"0(0#1#0"32088628383449192#0"0#
+
+CCompileC "build/fill and stretch.build/Debug/fill and stretch.build/Objects-normal/x86_64/main.o" /Users/asd/SourceCode/private-stereo/fill-and-stretch/main.cpp normal x86_64 c++ com.apple.compilers.gcc.4_2
+s340532435.513493
+e340532436.580166
+r1
+xCompileC
+xbuild/fill and stretch.build/Debug/fill and stretch.build/Objects-normal/x86_64/main.o
+x/Users/asd/SourceCode/private-stereo/fill-and-stretch/main.cpp
+xnormal
+xx86_64
+xc++
+xcom.apple.compilers.gcc.4_2
+lSLF07#2@70"Compile /Users/asd/SourceCode/private-stereo/fill-and-stretch/main.cpp340532435#340532436#0(0"0(0#0#62"/Users/asd/SourceCode/private-stereo/fill-and-stretch/main.cpp7665776580704888832#1653"    cd /Users/asd/SourceCode/private-stereo/fill-and-stretch    setenv LANG en_US.US-ASCII    /Developer/usr/bin/gcc-4.2 -x c++ -arch x86_64 -fmessage-length=0 -pipe -Wno-trigraphs -fpascal-strings -fasm-blocks -O0 -Wreturn-type -Wunused-variable -isysroot /Developer/SDKs/MacOSX10.6.sdk -mfix-and-continue -fvisibility-inlines-hidden -mmacosx-version-min=10.6 -gdwarf-2 -iquote "/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/fill and stretch.build/Debug/fill and stretch.build/fill and stretch-generated-files.hmap" "-I/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/fill and stretch.build/Debug/fill and stretch.build/fill and stretch-own-target-headers.hmap" "-I/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/fill and stretch.build/Debug/fill and stretch.build/fill and stretch-all-target-headers.hmap" -iquote "/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/fill and stretch.build/Debug/fill and stretch.build/fill and stretch-project-headers.hmap" -F/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/Debug -I/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/Debug/include -I/usr/local/include "-I/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/fill and stretch.build/Debug/fill and stretch.build/DerivedSources/x86_64" "-I/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/fill and stretch.build/Debug/fill and stretch.build/DerivedSources" -c /Users/asd/SourceCode/private-stereo/fill-and-stretch/main.cpp -o "/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/fill and stretch.build/Debug/fill and stretch.build/Objects-normal/x86_64/main.o"0#
+
+CLd "/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/Debug/fill and stretch" normal x86_64
+s340532436.580353
+e340532437.012109
+r1
+xLd
+x/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/Debug/fill and stretch
+xnormal
+xx86_64
+lSLF07#2@87"Link /Users/asd/SourceCode/private-stereo/fill-and-stretch/build/Debug/fill and stretch340532436#340532437#0(0"0(0#0#0"8598581600#817"    cd /Users/asd/SourceCode/private-stereo/fill-and-stretch    setenv MACOSX_DEPLOYMENT_TARGET 10.6    /Developer/usr/bin/g++-4.2 -arch x86_64 -isysroot /Developer/SDKs/MacOSX10.6.sdk -L/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/Debug -F/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/Debug -filelist "/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/fill and stretch.build/Debug/fill and stretch.build/Objects-normal/x86_64/fill and stretch.LinkFileList" -mmacosx-version-min=10.6 -lopencv_calib3d -lopencv_contrib -lopencv_core -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_highgui -lopencv_imgproc -lopencv_legacy -lopencv_ml -lopencv_objdetect -lopencv_ts -lopencv_video -o "/Users/asd/SourceCode/private-stereo/fill-and-stretch/build/Debug/fill and stretch"0#
+

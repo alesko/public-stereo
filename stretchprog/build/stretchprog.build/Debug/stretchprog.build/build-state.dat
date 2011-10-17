@@ -1,0 +1,151 @@
+Tstretchprog
+v7
+r0
+t340293750.148765
+cCheck dependencies
+cCompileC build/stretchprog.build/Debug/stretchprog.build/Objects-normal/x86_64/main.o /Users/asd/SourceCode/private-stereo/stretchprog/main.cpp normal x86_64 c++ com.apple.compilers.gcc.4_2
+cLd /Users/asd/SourceCode/private-stereo/stretchprog/build/Debug/stretchprog normal x86_64
+
+N/Developer/SDKs/MacOSX10.6.sdk
+c000000004A769DAB00000000000000EE
+t1249287595
+s238
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/include/math.h
+c000000004A5C14A000000000000004F1
+t1247548576
+s1265
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_calib3d.dylib
+c000000004E60BC9E00000000000B2990
+t1314962590
+s731536
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_contrib.dylib
+c000000004E60BC9F00000000000634E8
+t1314962591
+s406760
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_core.dylib
+c000000004E60BC9E0000000000220060
+t1314962590
+s2228320
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_features2d.dylib
+c000000004E60BC9E00000000001055B0
+t1314962590
+s1070512
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_flann.dylib
+c000000004E60BC9E000000000008D468
+t1314962590
+s578664
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_gpu.dylib
+c000000004E60BC9F0000000000021840
+t1314962591
+s137280
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_highgui.dylib
+c000000004E60BC9E000000000009BA00
+t1314962590
+s637440
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_imgproc.dylib
+c000000004E60BC9E00000000001FEC90
+t1314962590
+s2092176
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_legacy.dylib
+c000000004E60BC9E00000000000BEED0
+t1314962590
+s782032
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_ml.dylib
+c000000004E60BC9F0000000000079B40
+t1314962591
+s498496
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_objdetect.dylib
+c000000004E60BC9F0000000000063208
+t1314962591
+s406024
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_ts.dylib
+c000000004E60BC9E00000000000923B0
+t1314962590
+s598960
+
+N/Developer/SDKs/MacOSX10.6.sdk/usr/local/lib/libopencv_video.dylib
+c000000004E60BC9F0000000000044210
+t1314962591
+s279056
+
+N/Users/asd/SourceCode/private-stereo/stretchprog/build/Debug/stretchprog
+t1318600943
+s16664
+
+N/Users/asd/SourceCode/private-stereo/stretchprog/build/stretchprog.build/Debug/stretchprog.build/Objects-normal/x86_64/main.o
+t1318600943
+s102108
+
+N/Users/asd/SourceCode/private-stereo/stretchprog/build/stretchprog.build/Debug/stretchprog.build/Objects-normal/x86_64/stretchprog.LinkFileList
+c000000004E9821AF000000000000007E
+t1318592943
+s126
+
+N/Users/asd/SourceCode/private-stereo/stretchprog/main.cpp
+c000000004E9840EF0000000000000E7C
+t1318600943
+s3708
+i<iostream>
+i<opencv2/highgui/highgui.hpp>
+i<opencv2/opencv.hpp>
+i<opencv2/highgui/highgui.hpp>
+i<opencv2/core/core.hpp>
+i<opencv2/core/core.hpp>
+i<math.h>
+i<cassert>
+
+N/usr/local/include/opencv2/core/core.hpp
+c000000004E4929760000000000029BC7
+t1313417590
+s170951
+
+N/usr/local/include/opencv2/highgui/highgui.hpp
+c000000004E37F2270000000000001C73
+t1312289319
+s7283
+
+N/usr/local/include/opencv2/opencv.hpp
+c000000004E37F20A0000000000000A9C
+t1312289290
+s2716
+
+CCheck dependencies
+r0
+lSLF07#2@18"Check dependencies340293750#340293750#0(0"0(0#1#0"8610830848#0"0#
+
+CCompileC build/stretchprog.build/Debug/stretchprog.build/Objects-normal/x86_64/main.o /Users/asd/SourceCode/private-stereo/stretchprog/main.cpp normal x86_64 c++ com.apple.compilers.gcc.4_2
+s340293743.605201
+e340293743.859894
+r1
+xCompileC
+xbuild/stretchprog.build/Debug/stretchprog.build/Objects-normal/x86_64/main.o
+x/Users/asd/SourceCode/private-stereo/stretchprog/main.cpp
+xnormal
+xx86_64
+xc++
+xcom.apple.compilers.gcc.4_2
+lSLF07#2@65"Compile /Users/asd/SourceCode/private-stereo/stretchprog/main.cpp340293743#340293743#0(287"/Users/asd/SourceCode/private-stereo/stretchprog/main.cpp: In function 'int main(int, char** const*)':/Users/asd/SourceCode/private-stereo/stretchprog/main.cpp:16: warning: unused variable 'tl'/Users/asd/SourceCode/private-stereo/stretchprog/main.cpp:17: warning: unused variable 'tr'2(22@20"Unused variable 'tl'340293743#103#92#0(6@57"/Users/asd/SourceCode/private-stereo/stretchprog/main.cpp340293743#16#0#16#0#19"unused variable '*'0(22@20"Unused variable 'tr'340293743#195#92#0(6@57"/Users/asd/SourceCode/private-stereo/stretchprog/main.cpp340293743#17#0#17#0#19"unused variable '*'0(0#0#57"/Users/asd/SourceCode/private-stereo/stretchprog/main.cpp8611719520#1494"    cd /Users/asd/SourceCode/private-stereo/stretchprog    setenv LANG en_US.US-ASCII    /Developer/usr/bin/gcc-4.2 -x c++ -arch x86_64 -fmessage-length=0 -pipe -Wno-trigraphs -fpascal-strings -fasm-blocks -O0 -Wreturn-type -Wunused-variable -isysroot /Developer/SDKs/MacOSX10.6.sdk -mfix-and-continue -fvisibility-inlines-hidden -mmacosx-version-min=10.6 -gdwarf-2 -iquote /Users/asd/SourceCode/private-stereo/stretchprog/build/stretchprog.build/Debug/stretchprog.build/stretchprog-generated-files.hmap -I/Users/asd/SourceCode/private-stereo/stretchprog/build/stretchprog.build/Debug/stretchprog.build/stretchprog-own-target-headers.hmap -I/Users/asd/SourceCode/private-stereo/stretchprog/build/stretchprog.build/Debug/stretchprog.build/stretchprog-all-target-headers.hmap -iquote /Users/asd/SourceCode/private-stereo/stretchprog/build/stretchprog.build/Debug/stretchprog.build/stretchprog-project-headers.hmap -F/Users/asd/SourceCode/private-stereo/stretchprog/build/Debug -I/Users/asd/SourceCode/private-stereo/stretchprog/build/Debug/include -I/usr/local/include -I/Users/asd/SourceCode/private-stereo/stretchprog/build/stretchprog.build/Debug/stretchprog.build/DerivedSources/x86_64 -I/Users/asd/SourceCode/private-stereo/stretchprog/build/stretchprog.build/Debug/stretchprog.build/DerivedSources -c /Users/asd/SourceCode/private-stereo/stretchprog/main.cpp -o /Users/asd/SourceCode/private-stereo/stretchprog/build/stretchprog.build/Debug/stretchprog.build/Objects-normal/x86_64/main.o0#
+
+CLd /Users/asd/SourceCode/private-stereo/stretchprog/build/Debug/stretchprog normal x86_64
+s340293743.859948
+e340293743.883964
+r1
+xLd
+x/Users/asd/SourceCode/private-stereo/stretchprog/build/Debug/stretchprog
+xnormal
+xx86_64
+lSLF07#2@77"Link /Users/asd/SourceCode/private-stereo/stretchprog/build/Debug/stretchprog340293743#340293743#0(0"0(0#0#0"8612468064#768"    cd /Users/asd/SourceCode/private-stereo/stretchprog    setenv MACOSX_DEPLOYMENT_TARGET 10.6    /Developer/usr/bin/g++-4.2 -arch x86_64 -isysroot /Developer/SDKs/MacOSX10.6.sdk -L/Users/asd/SourceCode/private-stereo/stretchprog/build/Debug -F/Users/asd/SourceCode/private-stereo/stretchprog/build/Debug -filelist /Users/asd/SourceCode/private-stereo/stretchprog/build/stretchprog.build/Debug/stretchprog.build/Objects-normal/x86_64/stretchprog.LinkFileList -mmacosx-version-min=10.6 -lopencv_calib3d -lopencv_contrib -lopencv_core -lopencv_features2d -lopencv_flann -lopencv_gpu -lopencv_highgui -lopencv_imgproc -lopencv_legacy -lopencv_ml -lopencv_objdetect -lopencv_ts -lopencv_video -o /Users/asd/SourceCode/private-stereo/stretchprog/build/Debug/stretchprog0#
+
