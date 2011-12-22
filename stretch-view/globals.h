@@ -9,7 +9,7 @@
 #include <libraw1394/raw1394.h>
 */
 
-#include "definitions.h"
+//#include "definitions.h"
 /*#include <pthread.h>
 #include <stdint.h>
 #include <libraw1394/raw1394.h>
@@ -21,8 +21,8 @@
 //#include <dc1394/linux/control.h>
 
 
-camera_t* g_camera;
-camera_t* g_cameras;
+//camera_t* g_camera;
+//camera_t* g_cameras;
 dc1394_t *g_dc1394;
 
 

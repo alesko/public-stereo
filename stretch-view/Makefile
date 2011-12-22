@@ -7,7 +7,7 @@
 TARGET = test
 #DESTINATION = /usr/local/lib
 
-HEADER = definitions.h camera.h globals.h
+HEADER = globals.h
 #HEADER_DESTINATION = /usr/local/include
 
 CFLAGS +=  -Wall 
@@ -24,7 +24,7 @@ CC = gcc
 
 all: main.c
 #	$(CC) -o test test.c camera.c definitions.c -I. $(LIBFLAGS)
-	$(CC) -o testSDL main.c camera.c definitions.c -I. $(LIBFLAGS) $(SDLFLAGS)
+	$(CC) -o testSDL main.c -I. $(LIBFLAGS) $(SDLFLAGS)
 
 #	$(CC) -o texture_sub  texture_sub.c $(LIBFLAGS)
 #gcc -Wall -lglut -ldc1394_control -lraw1394 -lGL -lGLU texture_sub.c -o texture_sub

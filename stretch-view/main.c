@@ -1,3 +1,6 @@
+
+
+
 #include <stdio.h>
 //#include <libdc1394/>
 #include <stdlib.h>
@@ -46,7 +49,7 @@
 #include <ffmpeg/swscale.h>
 #endif
 
-#include "camera.h"
+//#include "camera.h"
 
 //#define IMAGE_FILE_NAME "Image.pgm"
 
