@@ -1,12 +1,28 @@
 #include <iostream>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/opencv.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <opencv2/core/core.hpp>
-#include <opencv2/core/core.hpp>
 #include <math.h>
 //#include <OpenCV/OpenCV.h>
 #include <cassert>
+
+
+#ifdef DARWIN
+#include <opencv2/opencv.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/core/core.hpp>
+#endif 
+#ifdef LINUX
+#include <cv.h>
+#include <highgui.h>
+#include <dc1394.h>
+#include <raw1394.h>
+#include <libraw1394/raw1394.h>
+#include <dc1394/control.h>
+#endif 
+
+using namespace cv;
+
+void dummy(int in){
+}
+
 
 IplImage* GetThresholdedImage(IplImage* img)
 {
@@ -20,7 +36,7 @@ IplImage* GetThresholdedImage(IplImage* img)
 }
 
 
-int main (int argc, char ** const argv[]) {
+int main (int argc, char* const argv[]) {
     // insert code here...
 	int pp_size = 80;// percentage size of participant compared to mannequin x2
 	int maxstretch = 400;
@@ -41,14 +57,9 @@ int main (int argc, char ** const argv[]) {
 	float percent;
 	//int pp_size = 100;// percentage size of participant compared to mannequin x2
 	int trackpos = maxstretch; 
-		
-	
-	
 	
 	// Create a buffer to put the text:
 	char text[100];
-	
-	
 	
 	// Init the font:
 	CvFont font1;
@@ -77,36 +88,33 @@ int main (int argc, char ** const argv[]) {
 	}
 	assert( c_capture );
 	
-	cvSetCaptureProperty( c_capture, CV_CAP_PROP_FRAME_WIDTH, 320 );
-	cvSetCaptureProperty( c_capture, CV_CAP_PROP_FRAME_HEIGHT, 240 );
-	
-	
+	cvSetCaptureProperty( c_capture, CV_CAP_PROP_FRAME_WIDTH, 800 );
+	cvSetCaptureProperty( c_capture, CV_CAP_PROP_FRAME_HEIGHT, 600 );
 	
 	IplImage* frame;
 	//frame1 = cvQueryFrame( c_capture );
 	//IplImage* frame = GetThresholdedImage(frame1);
 	
-	cvCreateTrackbar("tl", "live", &trackpos, maxstretch);
+	cvCreateTrackbar("tl", "live", &trackpos, maxstretch, dummy);
 	//cvSetTrackbarPos("tl", "live", 400 );
-	
+
+	float inc = (((float)pp_size*2)/maxstretch)/2;
+	int percent1 = (long) percent;
+
+	frame = cvQueryFrame( c_capture );
+	IplImage* warp = cvCreateImage (cvGetSize(frame), IPL_DEPTH_8U, 3);
+	IplImage* frame1 = GetThresholdedImage(warp);
+
 	while(1) {
 		
-		
 		frame = cvQueryFrame( c_capture );
-		IplImage* warp = cvCreateImage (cvGetSize(frame), IPL_DEPTH_8U, 3);
-		
-		
-		
-		float inc = (((float)pp_size*2)/maxstretch)/2;
+		warp = cvCreateImage (cvGetSize(frame), IPL_DEPTH_8U, 3);
+
 		//float inc1 = inc/2;
 		l = 0.5 - ((inc/100) *trackpos);
 		r = 0.5 + ((inc/100)* trackpos);
 		percent = trackpos/2;
-		int percent1 = (long) percent;
-		
-	
-		
-		
+		percent1 = (long) percent;
 		
 		//cvGetTrackbarPos("tl", "live");
 		
@@ -132,17 +140,17 @@ int main (int argc, char ** const argv[]) {
 		// Print to the buffer, eg if you want to display an integer:
 		sprintf( text, "%d%s", percent1, "%");
 		
-		
 		// Before you display the image, put the text in the image
 		cvPutText(frame,  text, pt, &font1, red);
 		
 		IplImage* frame1 = GetThresholdedImage(warp);
 		
-		
 		if(!frame ) break;
 		cvShowImage ( "live", frame );
 		cvShowImage("liveout", warp);
 		cvShowImage("filter", frame1);
+		cvReleaseImage(&frame1);
+		
 		char c = cvWaitKey(33);
 		if( c == 27 )break;
 		

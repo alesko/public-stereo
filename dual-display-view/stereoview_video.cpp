@@ -72,11 +72,23 @@ int main (int argc, char * const argv[]) {
 	cvMoveWindow("Left",00,00);
 	cvNamedWindow( "Right", CV_WINDOW_AUTOSIZE );
 	cvMoveWindow("Right",1280,00);
+	if( argc < 3 )
+	  {
+	    cout << "No movies!" << endl;
+	    exit(0);
+	  }
 	CvCapture* capture_left = cvCreateFileCapture( argv[1] );
 	CvCapture* capture_right = cvCreateFileCapture( argv[2] );
-	double fps = cvGetCaptureProperty(capture_left,CV_CAP_PROP_FPS);
+	double fps;
+	if(argc > 3)
+	  fps = atoi(argv[3]);
+	else 
+	  fps = cvGetCaptureProperty(capture_left,CV_CAP_PROP_FPS);
+	cout << "Fps" << fps << endl;
+	
+	//fps = 250;
 	int wait_time= (int)1000.0/fps;
-	double tstart, t_elaps;
+	double t0,tstart, t_elaps;
 	
 	IplImage* frame_l;
 	IplImage* frame_r;
@@ -93,35 +105,36 @@ int main (int argc, char * const argv[]) {
 	int thickness = 2;
 	int line_type = 8;
 	cvInitFont(&font1,CV_FONT_HERSHEY_DUPLEX,hscale,vscale,shear,thickness,line_type);
-	//char text[100];
+	char text[100];
 	int i=0;
 	CvPoint pt = cvPoint(10,30);
 	double scale=3.6;
+	int pitch=0;
 	
+	t0 = GetRunTime();
+
+
+
+	tstart = GetRunTime();
+	frame_l = cvQueryFrame( capture_left );
+	frame_r = cvQueryFrame( capture_right );
+	// Create a new 3 channel image
+	dest_l = cvCreateImage( cvSize(scale*(frame_l->width),scale*(frame_l->height)), 8, 3 );
+	dest_r = cvCreateImage( cvSize(scale*(frame_r->width),scale*(frame_r->height)), 8, 3 );
+	cvResize(frame_l, dest_l);
+	cvResize(frame_r, dest_r);
+	sprintf( text, "Frame number: %.1f", GetRunTime()-t0 );
+	cvPutText(dest_r, text, pt, &font1, blue);
+	//if( !frame_l ) break;
+	cvShowImage( "Left", dest_l );
+	//if( !frame_r ) break;
+	cvShowImage( "Right", dest_r );
 	while(1) {		
-	  //const char* text = "Left video";
-	  //sprintf( text, "Frame number: %d", i );
-	  tstart = GetRunTime();
-	  
-	  frame_l = cvQueryFrame( capture_left );
-	  frame_r = cvQueryFrame( capture_right );
-	  if (i == 0)
-	    {
-	      // Create a new 3 channel image
-	      dest_l = cvCreateImage( cvSize(scale*(frame_l->width),scale*(frame_l->height)), 8, 3 );
-	      dest_r = cvCreateImage( cvSize(scale*(frame_r->width),scale*(frame_r->height)), 8, 3 );
-	    }
-	  cvResize(frame_l, dest_l);
-	  cvResize(frame_r, dest_r);
-	  //cvPutText(frame_l, text, pt, &font1, red);
-	  //cvPutText(frame_r, text, pt, &font1, blue);
-	  if( !frame_l ) break;
-	  cvShowImage( "Left", dest_l );
-	  if( !frame_r ) break;
-	  cvShowImage( "Right", dest_r );
 	  t_elaps = 0.001*(GetRunTime()-tstart); // Convert to msec
-	  cout << "Fps:" << fps << "\tWaittime: " << wait_time << "\telaps:" << t_elaps<< endl;
-	  char c = cvWaitKey(wait_time-t_elaps); // Determines the framerate
+	  //cout << "Fps:" << fps << "\tWaittime: " << wait_time << "\telaps:" << t_elaps<< endl;
+	  char c = cvWaitKey(wait_time-(int)t_elaps); // Determines the framerate
+	  tstart = GetRunTime();
+	  //cout << "wait_time-(int)t_elaps:" << wait_time-(int)t_elaps << endl;
 	  if( c == 27 ) break;
 	  if( c == 32 )
 	    {
@@ -130,17 +143,34 @@ int main (int argc, char * const argv[]) {
 		c = cvWaitKey(250);
 	      }
 	    }
-	  if( c == 43 )
-	    {
-	      scale = scale + 0.1;
-	    }
-	  if( c == 45 )
-	    {
-	      scale = scale - 0.1;
-	    }
 	  
+	  //if(c == 43)
+	  //  pitch=pitch-1;
+	  //if(c == 45)
+	  //  pitch=pitch+1;
 	  i++;
+	  //cvReleaseImage(&dest_l);
+	  //cvReleaseImage(&dest_r);
+	  frame_l = cvQueryFrame( capture_left );
+	  frame_r = cvQueryFrame( capture_right );
+	  // Create a new 3 channel image
+	  //dest_l = cvCreateImage( cvSize(scale*(frame_l->width),scale*(frame_l->height)), 8, 3 );
+	  //dest_r = cvCreateImage( cvSize(scale*(frame_r->width),scale*(frame_r->height)), 8, 3 );
+	  //cvResize(frame_l, dest_l);
+	  //cvResize(frame_r, dest_r);
+	  
+	  //sprintf( text, "Frame number: %.1f", GetRunTime()-t0 );
+	  //cvPutText(dest_r, text, pt, &font1, blue);
+	  if( !frame_l ) break;
+	  //cvShowImage( "Left", dest_l );
+	  cvShowImage( "Left", frame_l );
+	  if( !frame_r ) break;
+	  //cvShowImage( "Right", dest_r );
+	  cvShowImage( "Right", frame_r );
+
 	}
+	cvReleaseImage(&dest_l);
+	cvReleaseImage(&dest_r);
 	cvReleaseCapture( &capture_left );
 	cvReleaseCapture( &capture_right );
 	cvDestroyWindow( "Left" );
