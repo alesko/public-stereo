@@ -81,6 +81,7 @@ GLint  nOfColors;
 long gcount_t=0;
 long gcount_n=0;
 int gstretch = 0;
+float g_fstretch = 1.0;
 /*
 typedef struct _Camera_Info {
   dc1394camera_t *camera_;
@@ -505,19 +506,64 @@ static void drawTexture(int width, int height)
 	    
 	  if(i ==0)
 	    {
-	      p0 = 0.0+(GLfloat)gstretch;
-	      p1 = (GLfloat)width/2-(GLfloat)gstretch;
-	      // Draw a textured quad	
-	      glBegin(GL_QUADS);
-	      glTexCoord2f(0.0f, 0.0f); glVertex2f(p0, 0.0f);
-	      glTexCoord2f(1.0f, 0.0f); glVertex2f(p1 , 0.0f);
-	      glTexCoord2f(1.0f, 1.0f); glVertex2f(p1 , (GLfloat)height );
-	      glTexCoord2f(0.0f, 1.0f); glVertex2f(p0, (GLfloat)height );
-	      glEnd();
+	      if( g_fstretch > 1.0)
+		{
+		  p0 = (g_fstretch -1.0)/2.0;
+		  p1 = 1.0 - (g_fstretch -1.0)/2.0;
+		  // Draw a textured quad	
+		  glBegin(GL_QUADS);
+		  glTexCoord2f(p0, 0.0f); glVertex2f(0.0f, 0.0f);
+		  glTexCoord2f(p1, 0.0f); glVertex2f((GLfloat)width/2, 0.0f);
+		  glTexCoord2f(p1, 1.0f); glVertex2f((GLfloat)width/2, (GLfloat)height );
+		  glTexCoord2f(p0, 1.0f); glVertex2f(0.0f, (GLfloat)height );
+		  glEnd();
+		}
+	      if( g_fstretch <= 1.0)
+		{
+		  float pix = g_fstretch*width/2.0;
+		  p0 = width/2.0-pix; //0.0+(GLfloat)gstretch;
+		  p1 = pix; //(GLfloat)width/2-(GLfloat)gstretch;
+		  //printf("%f %f\n",p0,p1);
+		  // Draw a textured quad
+		  glBegin(GL_QUADS);	
+		  glTexCoord2f(0.0f, 0.0f); glVertex2f((GLfloat)p0, 0.0f);
+		  glTexCoord2f(1.0f, 0.0f); glVertex2f((GLfloat)p1, 0.0f);
+		  glTexCoord2f(1.0f, 1.0f); glVertex2f((GLfloat)p1, (GLfloat)height );
+		  glTexCoord2f(0.0f, 1.0f); glVertex2f((GLfloat)p0, (GLfloat)height );
+		  glEnd();
+
+		}
 	    }
 	  else
-	    {
-	      p0 = (GLfloat)width/2+(GLfloat)gstretch;
+	    {	      
+	      if( g_fstretch > 1.0)
+		{
+		  p0 = (g_fstretch -1.0)/2.0;
+		  p1 = 1.0 - (g_fstretch -1.0)/2.0;
+		  // Draw a textured quad	
+		  glBegin(GL_QUADS);
+		  glTexCoord2f(p0, 0.0f); glVertex2f((GLfloat)width/2, 0.0f);
+		  glTexCoord2f(p1, 0.0f); glVertex2f((GLfloat)width, 0.0f);
+		  glTexCoord2f(p1, 1.0f); glVertex2f((GLfloat)width, (GLfloat)height );
+		  glTexCoord2f(p0, 1.0f); glVertex2f((GLfloat)width/2, (GLfloat)height );
+		  glEnd();
+		}
+	      if( g_fstretch <= 1.0)
+		{
+		  float pix = g_fstretch*width/2.0;
+		  p0 = (GLfloat)width/2+width/2.0-pix; //0.0+(GLfloat)gstretch;
+		  p1 = (GLfloat)width/2+pix; //(GLfloat)width/2-(GLfloat)gstretch;
+		  //printf("%f %f\n",p0,p1);
+		  // Draw a textured quad
+		  glBegin(GL_QUADS);	
+		  glTexCoord2f(0.0f, 0.0f); glVertex2f((GLfloat)p0, 0.0f);
+		  glTexCoord2f(1.0f, 0.0f); glVertex2f((GLfloat)p1, 0.0f);
+		  glTexCoord2f(1.0f, 1.0f); glVertex2f((GLfloat)p1, (GLfloat)height );
+		  glTexCoord2f(0.0f, 1.0f); glVertex2f((GLfloat)p0, (GLfloat)height );
+		  glEnd();
+
+		}
+	      /*p0 = (GLfloat)width/2+(GLfloat)gstretch;
 	      p1 = (GLfloat)width-(GLfloat)gstretch;
 	      // Draw a textured quad	
 	      glBegin(GL_QUADS);
@@ -525,7 +571,7 @@ static void drawTexture(int width, int height)
 	      glTexCoord2f(1.0f, 0.0f); glVertex2f(p1 , 0.0f);
 	      glTexCoord2f(1.0f, 1.0f); glVertex2f(p1 , (GLfloat)height );
 	      glTexCoord2f(0.0f, 1.0f); glVertex2f(p0, (GLfloat)height );
-	      glEnd();
+	      glEnd();*/
 	    }
 	  //printf("%f %f\t",(GLfloat)width,(GLfloat)height);
 	 
@@ -683,7 +729,8 @@ int main(int argc, char *argv[])
     if ( keys[SDLK_LEFT] ) {
       //view_roty += 5.0;
       //screen->w++;
-      gstretch++;
+      //gstretch++;
+      g_fstretch = g_fstretch + 0.01;
       /*      reshape(screen->w, screen->h);
       screen = SDL_SetVideoMode(event.resize.w, event.resize.h, 16,
 				SDL_OPENGL|SDL_RESIZABLE);
@@ -697,7 +744,8 @@ int main(int argc, char *argv[])
     if ( keys[SDLK_RIGHT] ) {
       //view_roty -= 5.0;
       //screen->w--;
-      gstretch--;
+      //gstretch--;
+      g_fstretch = g_fstretch - 0.01;
       /*screen = SDL_SetVideoMode(event.resize.w, event.resize.h, 16,
 				SDL_OPENGL|SDL_RESIZABLE);
       if ( screen ) {
