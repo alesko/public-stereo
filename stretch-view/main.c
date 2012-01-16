@@ -32,7 +32,7 @@
 //#ifdef HAVE_SDLLIB
 #include <GL/gl.h>
 #include <GL/glu.h>
-#include "SDL.h"
+#include <SDL.h>
 //#include "SDLEvent.h"
 //#endif
 
@@ -67,7 +67,7 @@
 #define TEX_WIDTH 640 //1024
 #define TEX_HEIGHT  480 //1024
 
-#define IMAGE_WIDTH 640*2
+#define IMAGE_WIDTH 2*640
 #define IMAGE_HEIGHT 480
 
 static GLint Tstart = 0;
@@ -232,6 +232,7 @@ int ieee1394init()
     //err = dc1394_video_set_mode(g_cameras->camera_info, DC1394_VIDEO_MODE_640x480_YUV422);
     dc1394_video_set_operation_mode(my_camera_ptr[i], DC1394_OPERATION_MODE_1394B);
     err = dc1394_video_set_mode(my_camera_ptr[i], DC1394_VIDEO_MODE_640x480_RGB8);
+    //err = dc1394_video_set_mode(my_camera_ptr[i], DC1394_VIDEO_MODE_800x600_RGB8);
     err = dc1394_video_set_iso_speed(my_camera_ptr[i],DC1394_ISO_SPEED_800);
     err = dc1394_video_set_framerate(my_camera_ptr[i], DC1394_FRAMERATE_30);
     err = dc1394_feature_set_value(my_camera_ptr[i],DC1394_FEATURE_SHUTTER,1400);
@@ -395,8 +396,8 @@ void *getImage( void *id)
   int frame_ready = 0;
   float p0,p1;
   int i;
-  int width = 640*2;
-  int height = 480;
+  int width = 800*2;//640*2;
+  int height = 600; //480;
   i = (int)id;
   
   if ( (dc1394_capture_dequeue(my_camera_ptr[i], gpolicy, &gframe[i]) == DC1394_SUCCESS)) 
@@ -600,6 +601,7 @@ static void drawTexture(int width, int height)
 }
 
 
+
 int main(int argc, char *argv[])
 {
   SDL_Surface *screen;
@@ -628,6 +630,9 @@ int main(int argc, char *argv[])
   mySDLinit(screen->w, screen->h);
   reshape(screen->w, screen->h);
   done = 0;
+  //TTF_Init();
+  //dispText();
+  //sleep(5);
 
   /*
 

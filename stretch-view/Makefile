@@ -10,9 +10,9 @@ TARGET = test
 HEADER = globals.h
 #HEADER_DESTINATION = /usr/local/include
 
-CFLAGS +=  -Wall 
-LIBFLAGS = -lraw1394 -ldc1394 -lGL -lglut  -lpthread
-SDLFLAGS=`sdl-config --cflags --libs`
+CFLAGS +=  -Wall -pg
+LIBFLAGS = -lraw1394 -ldc1394 -lGL -lglut  -lpthread -pg
+SDLFLAGS= `sdl-config --cflags --libs`
 CC = gcc
 
 %.o: %.c
