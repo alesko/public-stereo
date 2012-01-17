@@ -18,6 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,6 +41,7 @@
 
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <GL/glut.h>
 #include <SDL.h>
 
 
@@ -110,6 +112,7 @@ static struct option long_options[]={
 	{"device",1,NULL,0},
 	{"fps",1,NULL,0},
 	{"res",1,NULL,0},
+	{"pp",1,NULL,0},
 	{"help",0,NULL,0},
 	{NULL,0,0,0}
 };
@@ -117,7 +120,7 @@ static struct option long_options[]={
 
 
 float g_fstretch = 1.0;
-
+float g_mid = 1.0;
 
 void get_options(int argc,char *argv[])
 {
@@ -138,9 +141,12 @@ void get_options(int argc,char *argv[])
       case 2:
 	res=atoi(optarg);
 	break;
+      case 3:
+	g_mid=atof(optarg);
+	break;
       }
     }
-    if(option_index==3){
+    if(option_index==4){
       printf( "\n"
 	      "        %s - multi-cam monitor for libdc1394 and XVideo\n\n"
 	      "Usage:\n"
@@ -151,6 +157,8 @@ void get_options(int argc,char *argv[])
 	      "                        1 = 640x480 YUV4:1:1, 2 = 640x480 RGB8\n"
 	      "             --device - specifies video1394 device to use (optional)\n"
 	      "                        default = automatic\n"
+	      "             --pp     - specifies the initial scaling (optional)\n"
+	      "                        default = 1.0\n"
 	      "             --help   - prints this message\n\n"
 	      "Keyboard Commands:\n"
 	      "        q = quit\n"
@@ -219,7 +227,7 @@ void rgb2yuy2 (unsigned char *RGB, unsigned char *YUV, uint32_t NumPixels) {
   }
 }
 
-/* helper functions */
+// helper functions 
 
 void set_frame_length(unsigned long size, int numCameras)
 {
@@ -280,6 +288,7 @@ void display_frames()
   }
 }
 
+/*
 void QueryXv()
 {
   uint32_t num_adaptors;
@@ -306,7 +315,7 @@ void QueryXv()
     dc1394_log_error("No suitable Xv adaptor found");
 
 }
-
+*/
 
 void cleanup(void) {
   int i;
@@ -324,13 +333,16 @@ void cleanup(void) {
 }
 
 
-/* trap ctrl-c */
+// trap ctrl-c
+/*
 void signal_handler( int sig) {
   signal( SIGINT, SIG_IGN);
   cleanup();
   exit(0);
 }
+*/
 
+/*
 int mainold(int argc,char *argv[])
 {
   XEvent xev;
@@ -341,7 +353,7 @@ int mainold(int argc,char *argv[])
   dc1394camera_list_t * list;
 
   get_options(argc,argv);
-  /* process options */
+  // process options 
   switch(fps) {
   case 1: fps =        DC1394_FRAMERATE_1_875; break;
   case 3: fps =        DC1394_FRAMERATE_3_75; break;
@@ -409,7 +421,7 @@ int mainold(int argc,char *argv[])
     exit (1);
   }
 
-  /* setup cameras for capture */
+  // setup cameras for capture 
   for (i = 0; i < numCameras; i++) {
       
     //err=dc1394_video_set_iso_speed(cameras[i], DC1394_ISO_SPEED_400);
@@ -458,7 +470,7 @@ int mainold(int argc,char *argv[])
     exit(255);
   }
 
-  /* make the window */
+  // make the window 
   display=XOpenDisplay(getenv("DISPLAY"));
   if(display==NULL) {
     dc1394_log_error("Could not open display \"%s\"",getenv("DISPLAY"));
@@ -488,7 +500,7 @@ int mainold(int argc,char *argv[])
 
   gc=XCreateGC(display,window,0,&xgcv);
 
-  /* main event loop */
+  // main event loop 
   while(1){
 
     for (i = 0; i < numCameras; i++) {
@@ -561,17 +573,18 @@ int mainold(int argc,char *argv[])
 	}
 	break;
       }
-    } /* XPending */
+    } // XPending 
 
     for (i = 0; i < numCameras; i++) {
       if (frames[i])
 	dc1394_capture_enqueue (cameras[i], frames[i]);
     }
 
-  } /* while not interrupted */
+  } // while not interrupted 
 
   exit(0);
 }
+*/
 
 static void SDLinit(int width, int height)
 {
@@ -779,6 +792,10 @@ static void drawTexture(int width, int height)
 
 int main(int argc, char *argv[])
 {
+
+  //int was_init = TTF_WasInit();
+ 
+
   SDL_Surface *screen;
   int done;
   Uint8 *keys;
@@ -938,6 +955,7 @@ int main(int argc, char *argv[])
 	dc1394_log_error("Failed to capture from camera %d", i);
     }
 
+    //draw_stuff();
     drawTexture(screen->w, screen->h);
 
     idle();
@@ -965,17 +983,41 @@ int main(int argc, char *argv[])
       done = 1;
       cleanup();
     }
-    
+    if ( keys[SDLK_0] ) {
+      g_fstretch = g_mid;
+      printf("Strech 1.0: %f\n", g_fstretch);
+    }
+    if ( keys[SDLK_8] ) {
+      g_fstretch = 0.8*g_mid;
+      printf("Strech 0.8: %f\n", g_fstretch);
+    }
+    if ( keys[SDLK_9] ) {
+      g_fstretch = 0.9*g_mid;
+      printf("Strech 0.9: %f\n", g_fstretch);
+    }
+    if ( keys[SDLK_1] ) {
+      g_fstretch = 1.1*g_mid;
+      printf("Strech 1.1: %f\n", g_fstretch);
+    }
+    if ( keys[SDLK_2] ) {
+      g_fstretch = 1.2*g_mid;
+      printf("Strech 1.2: %f\n", g_fstretch);
+    }
     if ( keys[SDLK_UP] ) {
+      g_fstretch = 1.0;
+      g_mid = g_fstretch;
+      printf("Reset to 1.0");
     }
     if ( keys[SDLK_DOWN] ) {
+      g_mid = g_fstretch;
+      printf("Normal is: %f\n", g_mid);
     }
     if ( keys[SDLK_LEFT] ) {
-      //g_fstretch = g_fstretch + 0.01;
+      g_fstretch = g_fstretch + 0.01;
       //printf("Screen width: %d\n", screen->w);
     }
     if ( keys[SDLK_RIGHT] ) {
-      //g_fstretch = g_fstretch - 0.01;
+      g_fstretch = g_fstretch - 0.01;
       // printf("Screen width: %d\n", screen->w);
     }
     //draw();

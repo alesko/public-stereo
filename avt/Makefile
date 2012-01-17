@@ -33,3 +33,6 @@ all: avt_singleview.c dc1394_multiview.c
 
 gl: stereoviewGL.c
 	$(CC) -o stereoviewGL stereoviewGL.c -I. $(LIBFLAGS) $(SDLFLAGS)
+
+text: glutfonts.c
+	$(CC) -o glutfonts glutfonts.c -I. $(LIBFLAGS) $(SDLFLAGS)
