@@ -51,6 +51,7 @@
 
 #define IMAGE_WIDTH 2*640
 #define IMAGE_HEIGHT 480
+#define  NUM_TEXTURES 2
 
 /* uncomment the following to drop frames to prevent delays */
 #define MAX_PORTS   4
@@ -72,6 +73,24 @@
 
 /* declarations for opengl */
 GLuint g_texture[2];			// This is a handle to our texture object
+
+/* Setup our booleans */
+//#define TRUE  1
+//#define FALSE 0
+#define true  1
+#define false 0
+typedef char bool;
+
+
+/* Number of textures to load */
+#define NUM_TEXTURES 2
+
+/* This is our SDL surface */
+SDL_Surface *surface;
+
+GLuint  base;                  /* Base Display List For The Font           */
+GLuint  texture[NUM_TEXTURES]; /* Storage For Our Font Texture             */
+GLuint  loop;                  /* Generic Loop Variable                    */
 
 /* declarations for libdc1394 */
 uint32_t numCameras = 0;
@@ -229,6 +248,301 @@ void rgb2yuy2 (unsigned char *RGB, unsigned char *YUV, uint32_t NumPixels) {
 
 // helper functions 
 
+// function to recover memory form our list of characters 
+GLvoid KillFont( GLvoid )
+{
+  glDeleteLists( base, 256 ); // Delete All 256 Display Lists 
+
+  return;
+}
+
+// function to load in bitmap as a GL texture 
+int LoadGLTextures()
+{
+  // Status indicator 
+  //int Status = FALSE;
+  bool status = false;
+
+  // Create storage space for the texture 
+  SDL_Surface *TextureImage[2];
+
+  // Load The Bitmap, Check For Errors, If Bitmap's Not Found Quit 
+  if ( ( TextureImage[0] = SDL_LoadBMP( "font.bmp" ) ) && 
+       ( TextureImage[1] = SDL_LoadBMP( "bumps.bmp" ) ) )
+    {
+	
+      // Set the status to true 
+      //Status = TRUE;
+      status = true;
+
+      // Create The Texture
+      glGenTextures( NUM_TEXTURES, &texture[0] );
+
+      // Load in texture 1
+      // Typical Texture Generation Using Data From The Bitmap 
+      glBindTexture( GL_TEXTURE_2D, texture[0] );
+
+      // Generate The Texture
+      glTexImage2D( GL_TEXTURE_2D, 0, 3, TextureImage[0]->w,
+		    TextureImage[0]->h, 0, GL_BGR,
+		    GL_UNSIGNED_BYTE, TextureImage[0]->pixels );
+	    
+      // Nearest Filtering
+      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+
+      // Load in texture 2
+      // Typical Texture Generation Using Data From The Bitmap 
+      glBindTexture( GL_TEXTURE_2D, texture[1] );
+
+      // Linear Filtering 
+      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+
+      // Generate The Texture 
+      glTexImage2D( GL_TEXTURE_2D, 0, 3, TextureImage[1]->w,
+		    TextureImage[1]->h, 0, GL_BGR,
+		    GL_UNSIGNED_BYTE, TextureImage[1]->pixels );
+    }
+
+  // Free up any memory we may have used 
+  if ( TextureImage[0] )
+    SDL_FreeSurface( TextureImage[0] );
+  if ( TextureImage[1] )
+    SDL_FreeSurface( TextureImage[1] );
+
+  //return Status;
+  return (int)status;
+}
+
+// function to build our font list 
+GLvoid BuildFont( GLvoid )
+{
+  GLuint loop; /* Loop variable               */
+  float cx;    /* Holds Our X Character Coord */
+  float cy;    /* Holds Our Y Character Coord */
+
+  /* Creating 256 Display List */
+  base  = glGenLists( 256 );
+  /* Select Our Font Texture */
+  glBindTexture( GL_TEXTURE_2D, texture[0] );
+
+  /* Loop Through All 256 Lists */
+  for ( loop = 0; loop < 256; loop++ )
+    {
+      /* NOTE:
+       *  BMPs are stored with the top-leftmost pixel being the
+       * last byte and the bottom-rightmost pixel being the first
+       * byte. So an image that is displayed as
+       *    1 0
+       *    0 0
+       * is represented data-wise like
+       *    0 0
+       *    0 1
+       * And because SDL_LoadBMP loads the raw data without
+       * translating to how it is thought of when viewed we need
+       * to start at the bottom-right corner of the data and work
+       * backwards to get everything properly. So the below code has
+       * been modified to reflect this. Examine how this is done and
+       * how the original tutorial is done to grasp the differences.
+       *
+       * As a side note BMPs are also stored as BGR instead of RGB
+       * and that is why we load the texture using GL_BGR. It's
+       * bass-ackwards I know but whattaya gonna do?
+       */
+
+      /* X Position Of Current Character */
+      cx = 1 - ( float )( loop % 16 ) / 16.0f;
+      /* Y Position Of Current Character */
+      cy = 1 - ( float )( loop / 16 ) / 16.0f;
+
+      /* Start Building A List */
+      glNewList( base + ( 255 - loop ), GL_COMPILE );
+      /* Use A Quad For Each Character */
+      glBegin( GL_QUADS );
+      /* Texture Coord (Bottom Left) */
+      glTexCoord2f( cx - 0.0625, cy );
+      /* Vertex Coord (Bottom Left) */
+      glVertex2i( 0, 0 );
+
+      /* Texture Coord (Bottom Right) */
+      glTexCoord2f( cx, cy );
+      /* Vertex Coord (Bottom Right) */
+      glVertex2i( 16, 0 );
+
+      /* Texture Coord (Top Right) */
+      glTexCoord2f( cx, cy - 0.0625f );
+      /* Vertex Coord (Top Right) */
+      glVertex2i( 16, 16 );
+
+      /* Texture Coord (Top Left) */
+      glTexCoord2f( cx - 0.0625f, cy - 0.0625f);
+      /* Vertex Coord (Top Left) */
+      glVertex2i( 0, 16 );
+      glEnd( );
+
+      /* Move To The Left Of The Character */
+      glTranslated( 10, 0, 0 );
+      glEndList( );
+    }
+}
+
+/* general OpenGL initialization function */
+int initGLfont( GLvoid )
+{
+
+  /* Load in the textures */
+  if ( !LoadGLTextures( ) )
+    return (int)false;
+
+    /* Build our font list */
+    BuildFont( );
+
+    /* Enable smooth shading */
+    glShadeModel( GL_SMOOTH );
+
+    /* Set the background black */
+    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+
+    /* Depth buffer setup */
+    glClearDepth( 1.0f );
+
+    /* The Type Of Depth Test To Do */
+    glDepthFunc( GL_LEQUAL );
+
+    /* Select The Type Of Blending */
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE );
+
+    /* Enable 2D Texture Mapping */
+    glEnable( GL_TEXTURE_2D );
+    
+    return (int)true;
+}
+
+/* Function to print the string */
+GLvoid glPrint( GLint x, GLint y, char *string, int set )
+{
+    if ( set > 1 )
+	set = 1;
+
+    /* Select our texture */
+    glBindTexture( GL_TEXTURE_2D, texture[0] );
+
+    /* Disable depth testing */
+    glDisable( GL_DEPTH_TEST );
+
+    /* Select The Projection Matrix */
+    glMatrixMode( GL_PROJECTION );
+    /* Store The Projection Matrix */
+    glPushMatrix( );
+
+    /* Reset The Projection Matrix */
+    glLoadIdentity( );
+    /* Set Up An Ortho Screen */
+    glOrtho( 0, 640, 0, 480, -1, 1 );
+
+    /* Select The Modelview Matrix */
+    glMatrixMode( GL_MODELVIEW );
+    /* Stor the Modelview Matrix */
+    glPushMatrix( );
+    /* Reset The Modelview Matrix */
+    glLoadIdentity( );
+
+    /* Position The Text (0,0 - Bottom Left) */
+    glTranslated( x, y, 0 );
+
+    /* Choose The Font Set (0 or 1) */
+    glListBase( base - 32 + ( 128 * set ) );
+
+    /* Write The Text To The Screen */
+    glCallLists( strlen( string ), GL_BYTE, string );
+
+    /* Select The Projection Matrix */
+    glMatrixMode( GL_PROJECTION );
+    /* Restore The Old Projection Matrix */
+    glPopMatrix( );
+
+    /* Select the Modelview Matrix */
+    glMatrixMode( GL_MODELVIEW );
+    /* Restore the Old Projection Matrix */
+    glPopMatrix( );
+
+    /* Re-enable Depth Testing */
+    glEnable( GL_DEPTH_TEST );
+}
+
+/* general OpenGL initialization function */
+int initGLFont( GLvoid )
+{
+
+  /* Load in the textures */
+  if ( !LoadGLTextures( ) )
+    return (int)false;
+
+    /* Build our font list */
+    BuildFont( );
+
+    /* Enable smooth shading */
+    glShadeModel( GL_SMOOTH );
+
+    /* Set the background black */
+    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+
+    /* Depth buffer setup */
+    glClearDepth( 1.0f );
+
+    /* The Type Of Depth Test To Do */
+    glDepthFunc( GL_LEQUAL );
+
+    /* Select The Type Of Blending */
+    glBlendFunc( GL_SRC_ALPHA, GL_ONE );
+
+    /* Enable 2D Texture Mapping */
+    glEnable( GL_TEXTURE_2D );
+    
+    return (int)true;
+}
+
+
+/* Here goes our drawing code */
+int drawGLQuestion( GLvoid )
+{
+    /* These are to calculate our fps */
+    static GLint T0     = 0;
+    static GLint Frames = 0;
+
+    /* Clear The Screen And The Depth Buffer */
+    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+ 
+    /* Re-enable Blending */
+    glEnable( GL_BLEND );
+    /* Reset the view */
+    glLoadIdentity( );
+
+    glColor3f( 1.0f , 1.0f , 1.0f );
+    glPrint( ( int ) (640/2),( int ) (480/2), "Is this question visibile and white?", 0 );
+
+    /* Draw it to the screen */
+    SDL_GL_SwapBuffers( );
+
+    /* Gather our frames per second */
+    /*Frames++;
+    {
+	GLint t = SDL_GetTicks();
+	if (t - T0 >= 5000) {
+	    GLfloat seconds = (t - T0) / 1000.0;
+	    GLfloat fps = Frames / seconds;
+	    printf("%d frames in %g seconds = %g FPS\n", Frames, seconds, fps);
+	    T0 = t;
+	    Frames = 0;
+	}
+    }
+    usleep(10000);*/
+
+    return (int)true;
+}
+
 void set_frame_length(unsigned long size, int numCameras)
 {
   frame_length=size;
@@ -237,6 +551,7 @@ void set_frame_length(unsigned long size, int numCameras)
   frame_buffer = malloc( size * numCameras);
 }
 
+/*
 void display_frames()
 {
   uint32_t i;
@@ -277,17 +592,17 @@ void display_frames()
 	       0,0,device_width ,device_height * numCameras,
 	       0,0,width,height);
     
-    /*        XvPutImage(display,info[adaptor].base_id,window,gc,xv_image,
-	      0,0,device_width * numCameras, device_height ,
-	      0,0,width, height);*/
-    /*XvPutImage(display,info[adaptor].base_id,window,gc,xv_image,
-      0,0,device_width , device_height * numCameras,
-      0,0,width, height);*/
+    //        XvPutImage(display,info[adaptor].base_id,window,gc,xv_image,
+//	      0,0,device_width * numCameras, device_height ,
+//	      0,0,width, height);
+    //XvPutImage(display,info[adaptor].base_id,window,gc,xv_image,
+// 0,0,device_width , device_height * numCameras,
+//    0,0,width, height);
 	   
     xv_image=NULL;
   }
 }
-
+*/
 /*
 void QueryXv()
 {
@@ -623,6 +938,7 @@ void initTexture(void) //int w, int h)
   for( i = 0; i<2;i++){
     //glBindTexture(GL_TEXTURE_2D, texture[i]);
     glGenTextures(1, &g_texture[i]);
+    glBindTexture(GL_TEXTURE_2D, g_texture[i]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
@@ -800,10 +1116,11 @@ int main(int argc, char *argv[])
   int done;
   Uint8 *keys;
 
-
   int i, j;
   dc1394_t * d;
   dc1394camera_list_t * list;
+
+  bool video = false;
 
   get_options(argc,argv);
   /* process options */
@@ -923,6 +1240,7 @@ int main(int argc, char *argv[])
 
   width=device_width* numCameras;
   height=device_height ;
+  video = true;
 
   if ( SDL_Init(SDL_INIT_VIDEO) != 0 ) {
     printf("Unable to initialize SDL: %s\n", SDL_GetError());
@@ -956,8 +1274,11 @@ int main(int argc, char *argv[])
     }
 
     //draw_stuff();
-    drawTexture(screen->w, screen->h);
-
+    if( video == true)
+      drawTexture(screen->w, screen->h);
+    else
+      drawGLQuestion();
+	
     idle();
     while ( SDL_PollEvent(&event) ) {
       switch(event.type) {
@@ -1020,6 +1341,11 @@ int main(int argc, char *argv[])
       g_fstretch = g_fstretch - 0.01;
       // printf("Screen width: %d\n", screen->w);
     }
+    if ( keys[SDLK_q] ) {
+      video = false;
+      initGLFont();
+    }
+
     //draw();
     //drawTexture(screen->w, screen->h);
     SDL_GL_SwapBuffers();
@@ -1030,6 +1356,9 @@ int main(int argc, char *argv[])
     }
 
   }
+
+  /* Clean up our textures */
+  glDeleteTextures( NUM_TEXTURES, &g_texture[0] );
 
   SDL_Quit();
   return 0;             /* ANSI C requires main to return int. */

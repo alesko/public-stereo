@@ -10,7 +10,7 @@
 #HEADER_DESTINATION = /usr/local/include
 
 CFLAGS +=  -Wall  -O2
-LIBFLAGS = -ldc1394 -lGL -L/usr/include -L/usr/X11R6/lib -lX11 -lXext -lXv -lXi  -lglut  -lpthread #-lXmu
+LIBFLAGS = -ldc1394 -lGL -L/usr/include -L/usr/X11R6/lib -lX11 -lXext -lXv -lXi  -lm -lpthread #-lXmu
 SDLFLAGS= `sdl-config --cflags --libs`
 CC = gcc
 NV = /usr/local/cuda/bin/nvcc
