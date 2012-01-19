@@ -44,17 +44,20 @@
 #include <GL/glut.h>
 #include <SDL.h>
 
-
 #include "dc1394/dc1394.h"
+//#include "globals.h"
+#include "displayvideo.h"
+#include "questionare.h"
+#include "conversion.h"
 
 /* OpenGL defs*/
 
-#define IMAGE_WIDTH 2*640
-#define IMAGE_HEIGHT 480
-#define  NUM_TEXTURES 2
+//#define IMAGE_WIDTH 2*640
+//#define IMAGE_HEIGHT 480
+//#define NUM_TEXTURES 2
 
 /* uncomment the following to drop frames to prevent delays */
-#define MAX_PORTS   4
+//#define MAX_PORTS   4
 #define MAX_CAMERAS 8
 #define NUM_BUFFERS 8
 
@@ -72,74 +75,54 @@
 #endif
 
 /* declarations for opengl */
-GLuint g_texture[2];			// This is a handle to our texture object
-
-/* Setup our booleans */
-//#define TRUE  1
-//#define FALSE 0
-#define true  1
-#define false 0
-typedef char bool;
-
-
-/* Number of textures to load */
-#define NUM_TEXTURES 2
-
-/* This is our SDL surface */
-SDL_Surface *surface;
-
-GLuint  base;                  /* Base Display List For The Font           */
-GLuint  texture[NUM_TEXTURES]; /* Storage For Our Font Texture             */
-GLuint  loop;                  /* Generic Loop Variable                    */
+//GLuint g_texture[2];			// This is a handle to our texture object
 
 /* declarations for libdc1394 */
 uint32_t numCameras = 0;
 dc1394camera_t *cameras[MAX_CAMERAS];
-dc1394featureset_t features;
-dc1394video_frame_t * frames[MAX_CAMERAS];
+//dc1394featureset_t features;
+
 
 /* declarations for video1394 */
 char *device_name=NULL;
 
 /* declarations for Xwindows */
-Display *display=NULL;
-Window window=(Window)NULL;
+//Display *display=NULL;
+//Window window=(Window)NULL;
 
 unsigned long width,height;
 unsigned long device_width,device_height;
-int connection=-1;
-XvImage *xv_image=NULL;
-XvAdaptorInfo *info;
+//int connection=-1;
+//XvImage *xv_image=NULL;
+//XvAdaptorInfo *info;
 long format=0;
-GC gc;
+//GC gc;
 
 
 /* Other declarations */
 unsigned long frame_length;
 long frame_free;
 int frame=0;
-int adaptor=-1;
+//int adaptor=-1;
 
-int freeze=0;
-int average=0;
+//int freeze=0;
+//int average=0;
 int fps;
 int res;
-char *frame_buffer=NULL;
-
-
-static struct option long_options[]={
-	{"device",1,NULL,0},
-	{"fps",1,NULL,0},
-	{"res",1,NULL,0},
-	{"pp",1,NULL,0},
-	{"help",0,NULL,0},
-	{NULL,0,0,0}
-};
-
+//char *frame_buffer=NULL;
 
 
 float g_fstretch = 1.0;
 float g_mid = 1.0;
+
+static struct option long_options[]={
+  {"device",1,NULL,0},
+  {"fps",1,NULL,0},
+  {"res",1,NULL,0},
+  {"pp",1,NULL,0},
+  {"help",0,NULL,0},
+  {NULL,0,0,0}
+};
 
 void get_options(int argc,char *argv[])
 {
@@ -196,441 +179,26 @@ void get_options(int argc,char *argv[])
 
 }
 
-/* image format conversion functions */
-/* The function iyu12yuy2 takes upp half of the time in execution -> use GPU? */
-
-static inline
-void iyu12yuy2 (unsigned char *src, unsigned char *dest, uint32_t NumPixels) {
-  int i=0,j=0;
-  register int y0, y1, y2, y3, u, v;
-  while (i < NumPixels*3/2) {
-    u = src[i++];
-    y0 = src[i++];
-    y1 = src[i++];
-    v = src[i++];
-    y2 = src[i++];
-    y3 = src[i++];
-
-    dest[j++] = y0;
-    dest[j++] = u;
-    dest[j++] = y1;
-    dest[j++] = v;
-
-    dest[j++] = y2;
-    dest[j++] = u;
-    dest[j++] = y3;
-    dest[j++] = v;
-  }
-}
-
-
-static inline
-void rgb2yuy2 (unsigned char *RGB, unsigned char *YUV, uint32_t NumPixels) {
-  int i, j;
-  register int y0, y1, u0, u1, v0, v1 ;
-  register int r, g, b;
-
-  for (i = 0, j = 0; i < 3 * NumPixels; i += 6, j += 4) {
-    r = RGB[i + 0];
-    g = RGB[i + 1];
-    b = RGB[i + 2];
-    RGB2YUV (r, g, b, y0, u0 , v0);
-    r = RGB[i + 3];
-    g = RGB[i + 4];
-    b = RGB[i + 5];
-    RGB2YUV (r, g, b, y1, u1 , v1);
-    YUV[j + 0] = y0;
-    YUV[j + 1] = (u0+u1)/2;
-    YUV[j + 2] = y1;
-    YUV[j + 3] = (v0+v1)/2;
-  }
-}
 
 // helper functions 
 
-// function to recover memory form our list of characters 
-GLvoid KillFont( GLvoid )
-{
-  glDeleteLists( base, 256 ); // Delete All 256 Display Lists 
-
-  return;
-}
-
-// function to load in bitmap as a GL texture 
-int LoadGLTextures()
-{
-  // Status indicator 
-  //int Status = FALSE;
-  bool status = false;
-
-  // Create storage space for the texture 
-  SDL_Surface *TextureImage[2];
-
-  // Load The Bitmap, Check For Errors, If Bitmap's Not Found Quit 
-  if ( ( TextureImage[0] = SDL_LoadBMP( "font.bmp" ) ) && 
-       ( TextureImage[1] = SDL_LoadBMP( "bumps.bmp" ) ) )
-    {
-	
-      // Set the status to true 
-      //Status = TRUE;
-      status = true;
-
-      // Create The Texture
-      glGenTextures( NUM_TEXTURES, &texture[0] );
-
-      // Load in texture 1
-      // Typical Texture Generation Using Data From The Bitmap 
-      glBindTexture( GL_TEXTURE_2D, texture[0] );
-
-      // Generate The Texture
-      glTexImage2D( GL_TEXTURE_2D, 0, 3, TextureImage[0]->w,
-		    TextureImage[0]->h, 0, GL_BGR,
-		    GL_UNSIGNED_BYTE, TextureImage[0]->pixels );
-	    
-      // Nearest Filtering
-      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-
-      // Load in texture 2
-      // Typical Texture Generation Using Data From The Bitmap 
-      glBindTexture( GL_TEXTURE_2D, texture[1] );
-
-      // Linear Filtering 
-      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-
-      // Generate The Texture 
-      glTexImage2D( GL_TEXTURE_2D, 0, 3, TextureImage[1]->w,
-		    TextureImage[1]->h, 0, GL_BGR,
-		    GL_UNSIGNED_BYTE, TextureImage[1]->pixels );
-    }
-
-  // Free up any memory we may have used 
-  if ( TextureImage[0] )
-    SDL_FreeSurface( TextureImage[0] );
-  if ( TextureImage[1] )
-    SDL_FreeSurface( TextureImage[1] );
-
-  //return Status;
-  return (int)status;
-}
-
-// function to build our font list 
-GLvoid BuildFont( GLvoid )
-{
-  GLuint loop; /* Loop variable               */
-  float cx;    /* Holds Our X Character Coord */
-  float cy;    /* Holds Our Y Character Coord */
-
-  /* Creating 256 Display List */
-  base  = glGenLists( 256 );
-  /* Select Our Font Texture */
-  glBindTexture( GL_TEXTURE_2D, texture[0] );
-
-  /* Loop Through All 256 Lists */
-  for ( loop = 0; loop < 256; loop++ )
-    {
-      /* NOTE:
-       *  BMPs are stored with the top-leftmost pixel being the
-       * last byte and the bottom-rightmost pixel being the first
-       * byte. So an image that is displayed as
-       *    1 0
-       *    0 0
-       * is represented data-wise like
-       *    0 0
-       *    0 1
-       * And because SDL_LoadBMP loads the raw data without
-       * translating to how it is thought of when viewed we need
-       * to start at the bottom-right corner of the data and work
-       * backwards to get everything properly. So the below code has
-       * been modified to reflect this. Examine how this is done and
-       * how the original tutorial is done to grasp the differences.
-       *
-       * As a side note BMPs are also stored as BGR instead of RGB
-       * and that is why we load the texture using GL_BGR. It's
-       * bass-ackwards I know but whattaya gonna do?
-       */
-
-      /* X Position Of Current Character */
-      cx = 1 - ( float )( loop % 16 ) / 16.0f;
-      /* Y Position Of Current Character */
-      cy = 1 - ( float )( loop / 16 ) / 16.0f;
-
-      /* Start Building A List */
-      glNewList( base + ( 255 - loop ), GL_COMPILE );
-      /* Use A Quad For Each Character */
-      glBegin( GL_QUADS );
-      /* Texture Coord (Bottom Left) */
-      glTexCoord2f( cx - 0.0625, cy );
-      /* Vertex Coord (Bottom Left) */
-      glVertex2i( 0, 0 );
-
-      /* Texture Coord (Bottom Right) */
-      glTexCoord2f( cx, cy );
-      /* Vertex Coord (Bottom Right) */
-      glVertex2i( 16, 0 );
-
-      /* Texture Coord (Top Right) */
-      glTexCoord2f( cx, cy - 0.0625f );
-      /* Vertex Coord (Top Right) */
-      glVertex2i( 16, 16 );
-
-      /* Texture Coord (Top Left) */
-      glTexCoord2f( cx - 0.0625f, cy - 0.0625f);
-      /* Vertex Coord (Top Left) */
-      glVertex2i( 0, 16 );
-      glEnd( );
-
-      /* Move To The Left Of The Character */
-      glTranslated( 10, 0, 0 );
-      glEndList( );
-    }
-}
-
-/* general OpenGL initialization function */
-int initGLfont( GLvoid )
-{
-
-  /* Load in the textures */
-  if ( !LoadGLTextures( ) )
-    return (int)false;
-
-    /* Build our font list */
-    BuildFont( );
-
-    /* Enable smooth shading */
-    glShadeModel( GL_SMOOTH );
-
-    /* Set the background black */
-    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
-
-    /* Depth buffer setup */
-    glClearDepth( 1.0f );
-
-    /* The Type Of Depth Test To Do */
-    glDepthFunc( GL_LEQUAL );
-
-    /* Select The Type Of Blending */
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE );
-
-    /* Enable 2D Texture Mapping */
-    glEnable( GL_TEXTURE_2D );
-    
-    return (int)true;
-}
-
-/* Function to print the string */
-GLvoid glPrint( GLint x, GLint y, char *string, int set )
-{
-    if ( set > 1 )
-	set = 1;
-
-    /* Select our texture */
-    glBindTexture( GL_TEXTURE_2D, texture[0] );
-
-    /* Disable depth testing */
-    glDisable( GL_DEPTH_TEST );
-
-    /* Select The Projection Matrix */
-    glMatrixMode( GL_PROJECTION );
-    /* Store The Projection Matrix */
-    glPushMatrix( );
-
-    /* Reset The Projection Matrix */
-    glLoadIdentity( );
-    /* Set Up An Ortho Screen */
-    glOrtho( 0, 640, 0, 480, -1, 1 );
-
-    /* Select The Modelview Matrix */
-    glMatrixMode( GL_MODELVIEW );
-    /* Stor the Modelview Matrix */
-    glPushMatrix( );
-    /* Reset The Modelview Matrix */
-    glLoadIdentity( );
-
-    /* Position The Text (0,0 - Bottom Left) */
-    glTranslated( x, y, 0 );
-
-    /* Choose The Font Set (0 or 1) */
-    glListBase( base - 32 + ( 128 * set ) );
-
-    /* Write The Text To The Screen */
-    glCallLists( strlen( string ), GL_BYTE, string );
-
-    /* Select The Projection Matrix */
-    glMatrixMode( GL_PROJECTION );
-    /* Restore The Old Projection Matrix */
-    glPopMatrix( );
-
-    /* Select the Modelview Matrix */
-    glMatrixMode( GL_MODELVIEW );
-    /* Restore the Old Projection Matrix */
-    glPopMatrix( );
-
-    /* Re-enable Depth Testing */
-    glEnable( GL_DEPTH_TEST );
-}
-
-/* general OpenGL initialization function */
-int initGLFont( GLvoid )
-{
-
-  /* Load in the textures */
-  if ( !LoadGLTextures( ) )
-    return (int)false;
-
-    /* Build our font list */
-    BuildFont( );
-
-    /* Enable smooth shading */
-    glShadeModel( GL_SMOOTH );
-
-    /* Set the background black */
-    glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
-
-    /* Depth buffer setup */
-    glClearDepth( 1.0f );
-
-    /* The Type Of Depth Test To Do */
-    glDepthFunc( GL_LEQUAL );
-
-    /* Select The Type Of Blending */
-    glBlendFunc( GL_SRC_ALPHA, GL_ONE );
-
-    /* Enable 2D Texture Mapping */
-    glEnable( GL_TEXTURE_2D );
-    
-    return (int)true;
-}
-
-
-/* Here goes our drawing code */
-int drawGLQuestion( GLvoid )
-{
-    /* These are to calculate our fps */
-    static GLint T0     = 0;
-    static GLint Frames = 0;
-
-    /* Clear The Screen And The Depth Buffer */
-    glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
- 
-    /* Re-enable Blending */
-    glEnable( GL_BLEND );
-    /* Reset the view */
-    glLoadIdentity( );
-
-    glColor3f( 1.0f , 1.0f , 1.0f );
-    glPrint( ( int ) (640/2),( int ) (480/2), "Is this question visibile and white?", 0 );
-
-    /* Draw it to the screen */
-    SDL_GL_SwapBuffers( );
-
-    /* Gather our frames per second */
-    /*Frames++;
-    {
-	GLint t = SDL_GetTicks();
-	if (t - T0 >= 5000) {
-	    GLfloat seconds = (t - T0) / 1000.0;
-	    GLfloat fps = Frames / seconds;
-	    printf("%d frames in %g seconds = %g FPS\n", Frames, seconds, fps);
-	    T0 = t;
-	    Frames = 0;
-	}
-    }
-    usleep(10000);*/
-
-    return (int)true;
-}
-
-void set_frame_length(unsigned long size, int numCameras)
-{
+/*unsigned long set_frame_length(unsigned long size, int numCameras)
+  {
   frame_length=size;
   dc1394_log_debug("Setting frame size to %ld kb",size/1024);
   frame_free=0;
   frame_buffer = malloc( size * numCameras);
-}
+  return 
+  }*/
 
-/*
-void display_frames()
-{
-  uint32_t i;
+/*void set_frame_length(unsigned long size, int numCameras)
+  {
+  frame_length=size;
+  dc1394_log_debug("Setting frame size to %ld kb",size/1024);
+  frame_free=0;
+  frame_buffer = malloc( size * numCameras);
+  }*/
 
-  if(!freeze && adaptor>=0){
-    for (i = 0; i < numCameras; i++) {
-      if (!frames[i])
-	continue;
-      switch (res) {
-      case DC1394_VIDEO_MODE_640x480_YUV411:
-	iyu12yuy2( frames[i]->image,
-		   (unsigned char *)(frame_buffer + (i * frame_length)),
-		   (device_width*device_height) );
-	break;
-
-      case DC1394_VIDEO_MODE_320x240_YUV422:
-      case DC1394_VIDEO_MODE_640x480_YUV422:
-	memcpy( frame_buffer + (i * frame_length),
-		frames[i]->image, device_width*device_height*2);
-	break;
-
-      case DC1394_VIDEO_MODE_640x480_RGB8:
-	rgb2yuy2( frames[i]->image,
-		  (unsigned char *) (frame_buffer + (i * frame_length)),
-		  (device_width*device_height) );
-	break;
-      }
-    }
-
-
-    xv_image=XvCreateImage(display,info[adaptor].base_id,format,frame_buffer,
-			   device_width,device_height* numCameras);
-
-    //xv_image=XvCreateImage(display,info[adaptor].base_id,format,frame_buffer,
-    //			   device_width, device_height* numCameras);
-
-    XvPutImage(display,info[adaptor].base_id,window,gc,xv_image,
-	       0,0,device_width ,device_height * numCameras,
-	       0,0,width,height);
-    
-    //        XvPutImage(display,info[adaptor].base_id,window,gc,xv_image,
-//	      0,0,device_width * numCameras, device_height ,
-//	      0,0,width, height);
-    //XvPutImage(display,info[adaptor].base_id,window,gc,xv_image,
-// 0,0,device_width , device_height * numCameras,
-//    0,0,width, height);
-	   
-    xv_image=NULL;
-  }
-}
-*/
-/*
-void QueryXv()
-{
-  uint32_t num_adaptors;
-  int num_formats;
-  XvImageFormatValues *formats=NULL;
-  int i,j;
-  char xv_name[5];
-
-  XvQueryAdaptors(display,DefaultRootWindow(display),&num_adaptors,&info);
-
-  for(i=0;i<num_adaptors;i++) {
-    formats=XvListImageFormats(display,info[i].base_id,&num_formats);
-    for(j=0;j<num_formats;j++) {
-      xv_name[4]=0;
-      memcpy(xv_name,&formats[j].id,4);
-      if(formats[j].id==format) {
-	dc1394_log_error("using Xv format 0x%x %s %s",formats[j].id,xv_name,(formats[j].format==XvPacked)?"packed":"planar");
-	if(adaptor<0)adaptor=i;
-      }
-    }
-  }
-  XFree(formats);
-  if(adaptor<0)
-    dc1394_log_error("No suitable Xv adaptor found");
-
-}
-*/
 
 void cleanup(void) {
   int i;
@@ -642,264 +210,30 @@ void cleanup(void) {
     XUnmapWindow(display,window);
     if (display != NULL)
     XFlush(display);*/
-  if (frame_buffer != NULL)
+  /*  if (frame_buffer != NULL)
     free( frame_buffer );
+  */
+}
 
+void ncleanup(uint32_t lnumCameras, dc1394camera_t **cam, char * fb) {
+  int i;
+  for (i=0; i < lnumCameras; i++) {
+    dc1394_video_set_transmission(cam[i], DC1394_OFF);
+    dc1394_capture_stop(cam[i]);
+  }
+  /*if ((void *)window != NULL)
+    XUnmapWindow(display,window);
+    if (display != NULL)
+    XFlush(display);*/
+  if (fb != NULL)
+  free( fb );
+
+  /*if (frame_buffer != NULL)
+    free( frame_buffer );
+  */
 }
 
 
-// trap ctrl-c
-/*
-void signal_handler( int sig) {
-  signal( SIGINT, SIG_IGN);
-  cleanup();
-  exit(0);
-}
-*/
-
-/*
-int mainold(int argc,char *argv[])
-{
-  XEvent xev;
-  XGCValues xgcv;
-  long background=0x010203;
-  int i, j;
-  dc1394_t * d;
-  dc1394camera_list_t * list;
-
-  get_options(argc,argv);
-  // process options 
-  switch(fps) {
-  case 1: fps =        DC1394_FRAMERATE_1_875; break;
-  case 3: fps =        DC1394_FRAMERATE_3_75; break;
-  case 15: fps = DC1394_FRAMERATE_15; break;
-  case 30: fps = DC1394_FRAMERATE_30; break;
-  case 60: fps = DC1394_FRAMERATE_60; break;
-  default: fps = DC1394_FRAMERATE_7_5; break;
-  }
-  switch(res) {
-  case 1:
-    res = DC1394_VIDEO_MODE_640x480_YUV411;
-    device_width=640;
-    device_height=480;
-    format=XV_YUY2;
-    break;
-  case 2:
-    res = DC1394_VIDEO_MODE_640x480_RGB8;
-    device_width=640;
-    device_height=480;
-    format=XV_YUY2;
-    break;
-  case 3:
-    res = DC1394_VIDEO_MODE_800x600_YUV422;
-    device_width=800;
-    device_height=600;
-    format=XV_UYVY;
-    break;
-  default:
-    res = DC1394_VIDEO_MODE_320x240_YUV422;
-    device_width=320;
-    device_height=240;
-    format=XV_UYVY;
-    break;
-  }
-
-  dc1394error_t err;
-
-  d = dc1394_new ();
-  if (!d)
-    return 1;
-  err=dc1394_camera_enumerate (d, &list);
-  DC1394_ERR_RTN(err,"Failed to enumerate cameras");
-
-  if (list->num == 0) {
-    dc1394_log_error("No cameras found");
-    return 1;
-  }
-
-  j = 0;
-  for (i = 0; i < list->num; i++) {
-    if (j >= MAX_CAMERAS)
-      break;
-    cameras[j] = dc1394_camera_new (d, list->ids[i].guid);
-    if (!cameras[j]) {
-      dc1394_log_warning("Failed to initialize camera with guid %llx", list->ids[i].guid);
-      continue;
-    }
-    j++;
-  }
-  numCameras = j;
-  dc1394_camera_free_list (list);
-
-  if (numCameras == 0) {
-    dc1394_log_error("No cameras found");
-    exit (1);
-  }
-
-  // setup cameras for capture 
-  for (i = 0; i < numCameras; i++) {
-      
-    //err=dc1394_video_set_iso_speed(cameras[i], DC1394_ISO_SPEED_400);
-    //dc1394_video_set_operation_mode(my_camera_ptr[i], DC1394_OPERATION_MODE_1394B);
-    err= dc1394_video_set_operation_mode(cameras[i], DC1394_OPERATION_MODE_1394B);
-    err=dc1394_video_set_iso_speed(cameras[i], DC1394_ISO_SPEED_800);
-    DC1394_ERR_CLN_RTN(err,cleanup(),"Could not set ISO speed");
-
-    err=dc1394_video_set_mode(cameras[i], res);
-    DC1394_ERR_CLN_RTN(err,cleanup(),"Could not set video mode");
-
-    err=dc1394_video_set_framerate(cameras[i], fps);
-    DC1394_ERR_CLN_RTN(err,cleanup(),"Could not set framerate");
-
-    err=dc1394_capture_setup(cameras[i],NUM_BUFFERS, DC1394_CAPTURE_FLAGS_DEFAULT);
-    DC1394_ERR_CLN_RTN(err,cleanup(),"Could not setup camera-\nmake sure that the video mode and framerate are\nsupported by your camera");
-
-    err=dc1394_video_set_transmission(cameras[i], DC1394_ON);
-    DC1394_ERR_CLN_RTN(err,cleanup(),"Could not start camera iso transmission");
-
-    // Camera settings
-    err = dc1394_feature_set_value(cameras[i],DC1394_FEATURE_SHUTTER,1400);
-    err = dc1394_feature_set_value(cameras[i],DC1394_FEATURE_BRIGHTNESS,800);
-    err = dc1394_feature_set_value(cameras[i],DC1394_FEATURE_EXPOSURE,150);
-    err = dc1394_feature_whitebalance_set_value(cameras[i],500,400);
-
-  }
-
-  fflush(stdout);
-  if (numCameras < 1) {
-    perror("no cameras found :(\n");
-    cleanup();
-    exit(-1);
-  }
-
-  switch(format){
-  case XV_YV12:
-    set_frame_length(device_width*device_height*3/2, numCameras);
-    break;
-  case XV_YUY2:
-  case XV_UYVY:
-    set_frame_length(device_width*device_height*2, numCameras);
-    break;
-  default:
-    dc1394_log_error("Unknown format set (internal error)");
-    exit(255);
-  }
-
-  // make the window 
-  display=XOpenDisplay(getenv("DISPLAY"));
-  if(display==NULL) {
-    dc1394_log_error("Could not open display \"%s\"",getenv("DISPLAY"));
-    cleanup();
-    exit(-1);
-  }
-
-  QueryXv();
-
-  if ( adaptor < 0 ) {
-    cleanup();
-    exit(-1);
-  }
-
-  width=device_width;
-  height=device_height * numCameras;
-  //width=device_width * numCameras;
-  //height=device_height;
-
-  window=XCreateSimpleWindow(display,DefaultRootWindow(display),0,0,width,height,0,
-			     WhitePixel(display,DefaultScreen(display)),
-			     background);
-
-  XSelectInput(display,window,StructureNotifyMask|KeyPressMask);
-  XMapWindow(display,window);
-  connection=ConnectionNumber(display);
-
-  gc=XCreateGC(display,window,0,&xgcv);
-
-  // main event loop 
-  while(1){
-
-    for (i = 0; i < numCameras; i++) {
-      if (dc1394_capture_dequeue(cameras[i], DC1394_CAPTURE_POLICY_WAIT, &frames[i])!=DC1394_SUCCESS)
-	dc1394_log_error("Failed to capture from camera %d", i);
-    }
-
-    display_frames();
-    XFlush(display);
-
-    while(XPending(display)>0){
-      XNextEvent(display,&xev);
-      switch(xev.type){
-      case ConfigureNotify:
-	width=xev.xconfigure.width;
-	height=xev.xconfigure.height;
-	display_frames();
-	break;
-      case KeyPress:
-	switch(XKeycodeToKeysym(display,xev.xkey.keycode,0)){
-	case XK_q:
-	case XK_Q:
-	  cleanup();
-	  exit(0);
-	  break;
-	case XK_comma:
-	case XK_less:
-	  //width=width/2;
-	  //height=height/2;
-	  width--;
-	  XResizeWindow(display,window,width,height);
-	  display_frames();
-	  break;
-	case XK_period:
-	case XK_greater:
-	  //width=2*width;
-	  //height=2*height;
-	  width++;
-	  XResizeWindow(display,window,width,height);
-	  display_frames();
-	  break;
-	case XK_0:
-	  freeze = !freeze;
-	  break;
-	case XK_1:
-	  fps =        DC1394_FRAMERATE_1_875;
-	  for (i = 0; i < numCameras; i++)
-	    dc1394_video_set_framerate(cameras[i], fps);
-	  break;
-	case XK_2:
-	  fps =        DC1394_FRAMERATE_3_75;
-	  for (i = 0; i < numCameras; i++)
-	    dc1394_video_set_framerate(cameras[i], fps);
-	  break;
-	case XK_4:
-	  fps = DC1394_FRAMERATE_15;
-	  for (i = 0; i < numCameras; i++)
-	    dc1394_video_set_framerate(cameras[i], fps);
-	  break;
-	case XK_5:
-	  fps = DC1394_FRAMERATE_30;
-	  for (i = 0; i < numCameras; i++)
-	    dc1394_video_set_framerate(cameras[i], fps);
-	  break;
-	case XK_3:
-	  fps = DC1394_FRAMERATE_7_5;
-	  for (i = 0; i < numCameras; i++)
-	    dc1394_video_set_framerate(cameras[i], fps);
-	  break;
-	}
-	break;
-      }
-    } // XPending 
-
-    for (i = 0; i < numCameras; i++) {
-      if (frames[i])
-	dc1394_capture_enqueue (cameras[i], frames[i]);
-    }
-
-  } // while not interrupted 
-
-  exit(0);
-}
-*/
 
 static void SDLinit(int width, int height)
 {
@@ -914,15 +248,17 @@ static void SDLinit(int width, int height)
   glMatrixMode( GL_MODELVIEW );
   glLoadIdentity();
 
-  glGenTextures(1, &g_texture[0]);
-  glGenTextures(1, &g_texture[1]);
+  //glGenTextures(1, &g_texture[0]);
+  // glGenTextures(1, &g_texture[1]);
   //Tstart = SDL_GetTicks();
 
 }
 
-void initTexture(void) //int w, int h)
+void initTexture(GLuint* tex, int num) //int w, int h)
 {
-  //nothing
+
+  int i;
+  
   glClearColor (0.0, 0.0, 0.0, 0.0);
   glShadeModel(GL_FLAT);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -934,37 +270,24 @@ void initTexture(void) //int w, int h)
 
   glEnable(GL_TEXTURE_2D);
 
-  int i;
   for( i = 0; i<2;i++){
-    //glBindTexture(GL_TEXTURE_2D, texture[i]);
-    glGenTextures(1, &g_texture[i]);
-    glBindTexture(GL_TEXTURE_2D, g_texture[i]);
+    glGenTextures(1, &tex[i]);
+    glBindTexture(GL_TEXTURE_2D, tex[i]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-
-    //printf ("Image width %d, height %d\n",gframe[i]->size[0],gframe[i]->size[1]);
-      
-
-    /*   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, w,
-	 h, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-	 gframe[i]->image); */
-
     glClear( GL_COLOR_BUFFER_BIT );
 
   }
 
 }
 
-static void
-idle(void)
+static void idle(void)
 {
-  usleep(1000); // 1 ms
-  //angle += 2.0;
+  usleep(1000); 
 }
 
-/* new window size or exposure */
-static void
-reshape(int width, int height)
+// new window size or exposure
+static void reshape(int width, int height)
 {
   GLfloat h = (GLfloat) height / (GLfloat) width;
 
@@ -977,10 +300,76 @@ reshape(int width, int height)
   glTranslatef(0.0, 0.0, -40.0);
 }
 
-
-static void drawTexture(int width, int height)
+void left(GLint w, GLint h, float s)
 {
+  GLfloat p0,p1;
 
+  if( s > 1.0)
+    {
+      p0 = (s -1.0)/2.0;
+      p1 = 1.0 - (s -1.0)/2.0;
+      // Draw a textured quad	
+      glBegin(GL_QUADS);
+      glTexCoord2f(p0, 0.0f); glVertex2f(0.0f, 0.0f);
+      glTexCoord2f(p1, 0.0f); glVertex2f((GLfloat)w/2, 0.0f);
+      glTexCoord2f(p1, 1.0f); glVertex2f((GLfloat)w/2, (GLfloat)h );
+      glTexCoord2f(p0, 1.0f); glVertex2f(0.0f, (GLfloat)h );
+      glEnd();
+    }
+  if( s <= 1.0)
+    {
+      float pix = s*w/2.0;
+      p0 = w/2.0-pix; 
+      p1 = pix; 
+      // Draw a textured quad
+      glBegin(GL_QUADS);	
+      glTexCoord2f(0.0f, 0.0f); glVertex2f((GLfloat)p0, 0.0f);
+      glTexCoord2f(1.0f, 0.0f); glVertex2f((GLfloat)p1, 0.0f);
+      glTexCoord2f(1.0f, 1.0f); glVertex2f((GLfloat)p1, (GLfloat)h );
+      glTexCoord2f(0.0f, 1.0f); glVertex2f((GLfloat)p0, (GLfloat)h );
+      glEnd();
+      
+    }
+  
+}
+
+void right(GLint w, GLint h, float s)
+{
+  GLfloat p0,p1;
+
+  if( s > 1.0)
+    {
+      p0 = (s -1.0)/2.0;
+      p1 = 1.0 - (s -1.0)/2.0;
+      // Draw a textured quad	
+      glBegin(GL_QUADS);
+      glTexCoord2f(p0, 0.0f); glVertex2f((GLfloat)w/2, 0.0f);
+      glTexCoord2f(p1, 0.0f); glVertex2f((GLfloat)w, 0.0f);
+      glTexCoord2f(p1, 1.0f); glVertex2f((GLfloat)w, (GLfloat)h );
+      glTexCoord2f(p0, 1.0f); glVertex2f((GLfloat)w/2, (GLfloat)h );
+      glEnd();
+    }
+  if( s <= 1.0)
+    {
+      float pix = s*w/2.0;
+      p0 = (GLfloat)w/2+w/2.0-pix; 
+      p1 = (GLfloat)w/2+pix; 
+      // Draw a textured quad
+      glBegin(GL_QUADS);	
+      glTexCoord2f(0.0f, 0.0f); glVertex2f((GLfloat)p0, 0.0f);
+      glTexCoord2f(1.0f, 0.0f); glVertex2f((GLfloat)p1, 0.0f);
+      glTexCoord2f(1.0f, 1.0f); glVertex2f((GLfloat)p1, (GLfloat)h );
+      glTexCoord2f(0.0f, 1.0f); glVertex2f((GLfloat)p0, (GLfloat)h );
+      glEnd();
+    }
+}
+
+
+static void drawTexture(int width, int height, float s, GLint* tex, unsigned char* data_left, unsigned char* data_right )
+{
+  int i;
+  int frame_ready = 1;
+  GLfloat p0,p1;
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_TEXTURE_2D);
@@ -993,124 +382,27 @@ static void drawTexture(int width, int height)
   // Switch to Model View Matrix
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
-  int i;
-  int frame_ready = 1;
-  GLfloat p0,p1;
-
-  /*GLint t0 = SDL_GetTicks();
-    for(i =0; i <2; i++)
-    {
-    frame_ready = 0;
-    if ( (dc1394_capture_dequeue(my_camera_ptr[i], gpolicy, &gframe[i]) == DC1394_SUCCESS)) 
-    frame_ready = 1;
-    else
-    printf("Error when in dc1394_capture_dequeue");         
-    }
-  */
-
-  for (i = 0; i < numCameras; i++) {
-    if (!frames[i])
-      continue;
-    switch (res) {
-    case DC1394_VIDEO_MODE_640x480_YUV411:
-      iyu12yuy2( frames[i]->image,
-		 (unsigned char *)(frame_buffer + (i * frame_length)),
-		 (device_width*device_height) );
-      break;
-      
-    case DC1394_VIDEO_MODE_320x240_YUV422:
-    case DC1394_VIDEO_MODE_640x480_YUV422:
-      memcpy( frame_buffer + (i * frame_length),
-	      frames[i]->image, device_width*device_height*2);
-      break;
-      
-    case DC1394_VIDEO_MODE_640x480_RGB8:
-      rgb2yuy2( frames[i]->image,
-		(unsigned char *) (frame_buffer + (i * frame_length)),
-		(device_width*device_height) );
-      break;
-    }
-    
-    for (i = 0; i < numCameras; i++) {
-      if(frame_ready == 1)
-	{
-	  glBindTexture( GL_TEXTURE_2D, g_texture[i] );
-	  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-	  glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-	  //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, gframe[i]->size[0],gframe[i]->size[1],0, GL_RGB, GL_UNSIGNED_BYTE, gframe[i]->image);
-	  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, device_width,device_height,0, GL_RGB, GL_UNSIGNED_BYTE, frames[i]->image);	    
-	  if(i ==0)
-	    {
-	      if( g_fstretch > 1.0)
-		{
-		  p0 = (g_fstretch -1.0)/2.0;
-		  p1 = 1.0 - (g_fstretch -1.0)/2.0;
-		  // Draw a textured quad	
-		  glBegin(GL_QUADS);
-		  glTexCoord2f(p0, 0.0f); glVertex2f(0.0f, 0.0f);
-		  glTexCoord2f(p1, 0.0f); glVertex2f((GLfloat)width/2, 0.0f);
-		  glTexCoord2f(p1, 1.0f); glVertex2f((GLfloat)width/2, (GLfloat)height );
-		  glTexCoord2f(p0, 1.0f); glVertex2f(0.0f, (GLfloat)height );
-		  glEnd();
-		}
-	      if( g_fstretch <= 1.0)
-		{
-		  float pix = g_fstretch*width/2.0;
-		  p0 = width/2.0-pix; //0.0+(GLfloat)gstretch;
-		  p1 = pix; //(GLfloat)width/2-(GLfloat)gstretch;
-		  // Draw a textured quad
-		  glBegin(GL_QUADS);	
-		  glTexCoord2f(0.0f, 0.0f); glVertex2f((GLfloat)p0, 0.0f);
-		  glTexCoord2f(1.0f, 0.0f); glVertex2f((GLfloat)p1, 0.0f);
-		  glTexCoord2f(1.0f, 1.0f); glVertex2f((GLfloat)p1, (GLfloat)height );
-		  glTexCoord2f(0.0f, 1.0f); glVertex2f((GLfloat)p0, (GLfloat)height );
-		  glEnd();
-
-		}
-	    }
-	  else
-	    {	      
-	      if( g_fstretch > 1.0)
-		{
-		  p0 = (g_fstretch -1.0)/2.0;
-		  p1 = 1.0 - (g_fstretch -1.0)/2.0;
-		  // Draw a textured quad	
-		  glBegin(GL_QUADS);
-		  glTexCoord2f(p0, 0.0f); glVertex2f((GLfloat)width/2, 0.0f);
-		  glTexCoord2f(p1, 0.0f); glVertex2f((GLfloat)width, 0.0f);
-		  glTexCoord2f(p1, 1.0f); glVertex2f((GLfloat)width, (GLfloat)height );
-		  glTexCoord2f(p0, 1.0f); glVertex2f((GLfloat)width/2, (GLfloat)height );
-		  glEnd();
-		}
-	      if( g_fstretch <= 1.0)
-		{
-		  float pix = g_fstretch*width/2.0;
-		  p0 = (GLfloat)width/2+width/2.0-pix; //0.0+(GLfloat)gstretch;
-		  p1 = (GLfloat)width/2+pix; //(GLfloat)width/2-(GLfloat)gstretch;
-		  // Draw a textured quad
-		  glBegin(GL_QUADS);	
-		  glTexCoord2f(0.0f, 0.0f); glVertex2f((GLfloat)p0, 0.0f);
-		  glTexCoord2f(1.0f, 0.0f); glVertex2f((GLfloat)p1, 0.0f);
-		  glTexCoord2f(1.0f, 1.0f); glVertex2f((GLfloat)p1, (GLfloat)height );
-		  glTexCoord2f(0.0f, 1.0f); glVertex2f((GLfloat)p0, (GLfloat)height );
-		  glEnd();
-
-		}
-	    }
-	  //dc1394_capture_enqueue(my_camera_ptr[i],gframe[i]); // release frame
-	}
-     
-    }
   
-  }
+  glBindTexture( GL_TEXTURE_2D, tex[0] );
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, device_width,device_height,0, GL_RGB, GL_UNSIGNED_BYTE, data_left); //frames[i]->image);
+  left(width,height, s);
+  glBindTexture( GL_TEXTURE_2D, tex[1] );
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, device_width,device_height,0, GL_RGB, GL_UNSIGNED_BYTE, data_right); //frames[i]->image);
+  right(width,height, s);
+  
 
 }
 
+
+
 int main(int argc, char *argv[])
 {
+  char *lfb=NULL;
+  dc1394video_frame_t * frames[MAX_CAMERAS];
+  GLuint video_texture[2];			// This is a handle to our texture object
 
-  //int was_init = TTF_WasInit();
- 
+  float mid = 1.0;
+  float stretch = 1.0;
 
   SDL_Surface *screen;
   int done;
@@ -1120,7 +412,8 @@ int main(int argc, char *argv[])
   dc1394_t * d;
   dc1394camera_list_t * list;
 
-  bool video = false;
+  //bool video = false;
+  int video = 0;
 
   get_options(argc,argv);
   /* process options */
@@ -1196,19 +489,19 @@ int main(int argc, char *argv[])
     // Set speed to 800 Mbits/s
     err= dc1394_video_set_operation_mode(cameras[i], DC1394_OPERATION_MODE_1394B);
     err=dc1394_video_set_iso_speed(cameras[i], DC1394_ISO_SPEED_800);
-    DC1394_ERR_CLN_RTN(err,cleanup(),"Could not set ISO speed");
+    DC1394_ERR_CLN_RTN(err,ncleanup(numCameras,cameras,lfb),"Could not set ISO speed");
 
     err=dc1394_video_set_mode(cameras[i], res);
-    DC1394_ERR_CLN_RTN(err,cleanup(),"Could not set video mode");
+    DC1394_ERR_CLN_RTN(err,ncleanup(numCameras,cameras,lfb),"Could not set video mode");
 
     err=dc1394_video_set_framerate(cameras[i], fps);
-    DC1394_ERR_CLN_RTN(err,cleanup(),"Could not set framerate");
+    DC1394_ERR_CLN_RTN(err,ncleanup(numCameras,cameras,lfb),"Could not set framerate");
 
     err=dc1394_capture_setup(cameras[i],NUM_BUFFERS, DC1394_CAPTURE_FLAGS_DEFAULT);
-    DC1394_ERR_CLN_RTN(err,cleanup(),"Could not setup camera-\nmake sure that the video mode and framerate are\nsupported by your camera");
+    DC1394_ERR_CLN_RTN(err,ncleanup(numCameras,cameras,lfb),"Could not setup camera-\nmake sure that the video mode and framerate are\nsupported by your camera");
 
     err=dc1394_video_set_transmission(cameras[i], DC1394_ON);
-    DC1394_ERR_CLN_RTN(err,cleanup(),"Could not start camera iso transmission");
+    DC1394_ERR_CLN_RTN(err,ncleanup(numCameras,cameras,lfb),"Could not start camera iso transmission");
 
     // Camera settings 
     err = dc1394_feature_set_value(cameras[i],DC1394_FEATURE_SHUTTER,1400);
@@ -1221,17 +514,32 @@ int main(int argc, char *argv[])
   fflush(stdout);
   if (numCameras < 1) {
     perror("no cameras found :(\n");
-    cleanup();
+    ncleanup(numCameras,cameras,lfb);
     exit(-1);
   }
 
+  unsigned long size;
   switch(format){
   case XV_YV12:
-    set_frame_length(device_width*device_height*3/2, numCameras);
+    //set_frame_length(device_width*device_height*3/2, numCameras);
+    //void set_frame_length(unsigned long size, int numCameras)
+    size = device_width*device_height*3/2;
+    frame_length=size;
+    dc1394_log_debug("Setting frame size to %ld kb",size/1024);
+    frame_free=0;
+    //    frame_buffer = malloc( size * numCameras);
+    lfb = malloc( size * numCameras);
     break;
   case XV_YUY2:
   case XV_UYVY:
-    set_frame_length(device_width*device_height*2, numCameras);
+    //set_frame_length(device_width*device_height*2, numCameras);
+    size = device_width*device_height*3/2;
+    frame_length=size;
+    dc1394_log_debug("Setting frame size to %ld kb",size/1024);
+    frame_free=0;
+    //frame_buffer = malloc( size * numCameras);
+    lfb = malloc( size * numCameras);
+
     break;
   default:
     dc1394_log_error("Unknown format set (internal error)");
@@ -1240,7 +548,7 @@ int main(int argc, char *argv[])
 
   width=device_width* numCameras;
   height=device_height ;
-  video = true;
+  video = 1;
 
   if ( SDL_Init(SDL_INIT_VIDEO) != 0 ) {
     printf("Unable to initialize SDL: %s\n", SDL_GetError());
@@ -1262,7 +570,7 @@ int main(int argc, char *argv[])
 
   //init(argc, argv);
   SDLinit(screen->w, screen->h);
-  initTexture();
+  initTexture(video_texture,2);
   reshape(screen->w, screen->h);
   done = 0;
   while ( ! done ) {
@@ -1274,10 +582,17 @@ int main(int argc, char *argv[])
     }
 
     //draw_stuff();
-    if( video == true)
-      drawTexture(screen->w, screen->h);
+    if( video == 1 )
+      drawTexture(screen->w, screen->h, stretch, video_texture, frames[0]->image, frames[1]->image);
     else
-      drawGLQuestion();
+      {      
+	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+	glColor3f( 1.0f , 1.0f , 1.0f );
+	//glPrintStereo(screen->w, screen->h, (screen->w)/2 , (screen->h)/2, "Is this question visibile and white?", 0 );
+	glPrint(screen->w, screen->h, (screen->w)/4 , (screen->h)/2, "A question?", 0 );
+	glPrint(screen->w, screen->h, 3*(screen->w)/4 , (screen->h)/2, "A question?", 0 );
+      }
+    //drawGLQuestion();
 	
     idle();
     while ( SDL_PollEvent(&event) ) {
@@ -1302,47 +617,47 @@ int main(int argc, char *argv[])
 
     if ( keys[SDLK_ESCAPE] ) {
       done = 1;
-      cleanup();
+      ncleanup(numCameras,cameras,lfb);
     }
     if ( keys[SDLK_0] ) {
-      g_fstretch = g_mid;
-      printf("Strech 1.0: %f\n", g_fstretch);
+      stretch = g_mid;
+      printf("Strech 1.0: %f\n", stretch);
     }
     if ( keys[SDLK_8] ) {
-      g_fstretch = 0.8*g_mid;
-      printf("Strech 0.8: %f\n", g_fstretch);
+      stretch = 0.8*g_mid;
+      printf("Strech 0.8: %f\n", stretch);
     }
     if ( keys[SDLK_9] ) {
-      g_fstretch = 0.9*g_mid;
-      printf("Strech 0.9: %f\n", g_fstretch);
+      stretch = 0.9*g_mid;
+      printf("Strech 0.9: %f\n", stretch);
     }
     if ( keys[SDLK_1] ) {
-      g_fstretch = 1.1*g_mid;
-      printf("Strech 1.1: %f\n", g_fstretch);
+      stretch = 1.1*g_mid;
+      printf("Strech 1.1: %f\n", stretch);
     }
     if ( keys[SDLK_2] ) {
-      g_fstretch = 1.2*g_mid;
-      printf("Strech 1.2: %f\n", g_fstretch);
+      stretch = 1.2*g_mid;
+      printf("Strech 1.2: %f\n", stretch);
     }
     if ( keys[SDLK_UP] ) {
-      g_fstretch = 1.0;
-      g_mid = g_fstretch;
+      stretch = 1.0;
+      g_mid = stretch;
       printf("Reset to 1.0");
     }
     if ( keys[SDLK_DOWN] ) {
-      g_mid = g_fstretch;
+      g_mid = stretch;
       printf("Normal is: %f\n", g_mid);
     }
     if ( keys[SDLK_LEFT] ) {
-      g_fstretch = g_fstretch + 0.01;
+      stretch = stretch + 0.01;
       //printf("Screen width: %d\n", screen->w);
     }
     if ( keys[SDLK_RIGHT] ) {
-      g_fstretch = g_fstretch - 0.01;
+      stretch = stretch - 0.01;
       // printf("Screen width: %d\n", screen->w);
     }
     if ( keys[SDLK_q] ) {
-      video = false;
+      video = 0;
       initGLFont();
     }
 
@@ -1358,7 +673,8 @@ int main(int argc, char *argv[])
   }
 
   /* Clean up our textures */
-  glDeleteTextures( NUM_TEXTURES, &g_texture[0] );
+  //glDeleteTextures( NUM_TEXTURES, &g_texture[0] );
+  glDeleteTextures( NUM_TEXTURES, &video_texture[0] );
 
   SDL_Quit();
   return 0;             /* ANSI C requires main to return int. */
