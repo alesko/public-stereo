@@ -10,7 +10,7 @@
 #HEADER_DESTINATION = /usr/local/include
 
 CFLAGS +=  -Wall  -O2
-LIBFLAGS = -ldc1394 -lGL -L/usr/include -L/usr/X11R6/lib -lX11 -lXext -lXv -lXi  -lm -lpthread #-lXmu
+LIBFLAGS = -ldc1394 -lGL -L/usr/include -L/usr/X11R6/lib -lX11 -lXext -lXv -lXi  -lm -lpthread -I/usr/local/include -lgsl -lgslcblas  #-lXmu
 SDLFLAGS= `sdl-config --cflags --libs`
 CC = gcc
 NV = /usr/local/cuda/bin/nvcc
@@ -31,8 +31,14 @@ all: avt_singleview.c dc1394_multiview.c
 	$(CC) -o avt_singleview-new avt_singleview.c -I. $(LIBFLAGS)
 	$(CC) -o dc1394_multiview dc1394_multiview.c -I. $(LIBFLAGS)
 
-gl: stereoviewGL.c displayvideo.c
-	$(CC) -o stereoviewGL questionare.c displayvideo.c stereoviewGL.c -I. $(LIBFLAGS) $(SDLFLAGS)
+gl: stereoviewGL.c displayvideo.c tools.c
+	$(CC) -o stereoviewGL questionare.c displayvideo.c tools.c stereoviewGL.c -I. $(LIBFLAGS) $(SDLFLAGS)
 
 text: glutfonts.c
 	$(CC) -o glutfonts glutfonts.c -I. $(LIBFLAGS) $(SDLFLAGS)
+
+http: testmicrohttpd.c
+	$(CC) -o testmicrohttpd testmicrohttpd.c -I. $(LIBFLAGS)
+
+seed: testseed.c
+	$(CC) -o testseed testseed.c -I. $(LIBFLAGS)
