@@ -31,8 +31,8 @@ all: avt_singleview.c dc1394_multiview.c
 	$(CC) -o avt_singleview-new avt_singleview.c -I. $(LIBFLAGS)
 	$(CC) -o dc1394_multiview dc1394_multiview.c -I. $(LIBFLAGS)
 
-gl: stereoviewGL.c displayvideo.c tools.c
-	$(CC) -o stereoviewGL questionare.c displayvideo.c tools.c stereoviewGL.c -I. $(LIBFLAGS) $(SDLFLAGS)
+gl: stereoviewGL.c tools.c
+	$(CC) -o stereoviewGL questionare.c tools.c stereoviewGL.c -I. $(LIBFLAGS) $(SDLFLAGS)
 
 text: glutfonts.c
 	$(CC) -o glutfonts glutfonts.c -I. $(LIBFLAGS) $(SDLFLAGS)
