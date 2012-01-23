@@ -53,7 +53,7 @@
 //#include "tools.h"
 #include "dc1394/dc1394.h"
 //#include "globals.h"
-#include "displayvideo.h"
+//#include "displayvideo.h"
 #include "questionare.h"
 #include "conversion.h"
 
