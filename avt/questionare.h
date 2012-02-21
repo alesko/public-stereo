@@ -31,7 +31,7 @@ typedef char bool;
 #define NUM_TEXTURES 2
 
 /* This is our SDL surface */
-SDL_Surface *surface;
+//SDL_Surface *surface;
 
 GLuint  base;                  /* Base Display List For The Font           */
 GLuint  texture[NUM_TEXTURES]; /* Storage For Our Font Texture             */
@@ -45,11 +45,12 @@ void initTexture(GLuint* tex, int num);
 void reshape(int width, int height);
 void idle(void);
 
-void left(GLint w, GLint h, float s);
-void right(GLint w, GLint h, float s);
+void left(GLint w, GLint h, float s, float portion);
+void right(GLint w, GLint h, float s, float portion);
 
-  void drawTexture(int width, int height, int device_width, int device_height, float s, GLint* tex, unsigned char* data_left, unsigned char* data_right );
-  void drawBlank(void);
+void drawTexture(int width, int height, int device_width, int device_height, float s, GLuint* tex, unsigned char* data_left, unsigned char* data_right , float portion);
+void drawOverlayTexture(int width, int height, int device_width, int device_height, float s, GLuint* tex );
+void drawBlank(void);
 
 
 // function to recover memory form our list of characters 

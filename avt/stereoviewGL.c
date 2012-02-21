@@ -49,6 +49,7 @@
 //#include <GL/glu.h>
 //#include <GL/glut.h>
 #include <SDL.h>
+//#include "SDL_opengl.h"
 
 //#include "tools.h"
 #include "dc1394/dc1394.h"
@@ -56,7 +57,7 @@
 //#include "displayvideo.h"
 #include "questionare.h"
 #include "conversion.h"
-
+//#include "loadTexture.h"
 /* OpenGL defs*/
 
 
@@ -80,6 +81,7 @@
 #define XV_UYVY 0x59565955
 #endif
 
+//GLuint  g_texture[2]; /* Storage For Our Font Texture             */
 
 void cleanup(uint32_t lnumCameras, dc1394camera_t **cam, char * fb) {
   int i;
@@ -124,8 +126,80 @@ int questions(int num, SDL_Surface* screen){
 
 int main(int argc, char *argv[])
 {
-  int  i, j;
 
+  float portion = 0.5;
+  int mouse_x, mouse_y;
+
+  // Create storage space for the texture 
+  /*  SDL_Surface *ManeqImage[2];
+  GLuint overlay_texture[2];			// This is a handle to our texture object
+  
+  if ( ( ManeqImage[0] = SDL_LoadBMP( "left.bmp" ) ) && 
+       ( ManeqImage[1] = SDL_LoadBMP( "left.bmp" ) ) )
+    {
+      
+      glClearColor (0.0, 0.0, 0.0, 0.0);
+      glShadeModel(GL_FLAT);
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+      glDisable(GL_BLEND);
+      //glDisable(GL_DEPTH_TEST);
+      glEnable(GL_DEPTH_TEST); // Draw textures on top
+      glDepthMask(GL_FALSE);
+      glDisable(GL_CULL_FACE);      
+      glEnable(GL_TEXTURE_2D);
+
+      printf("Loading textures.");
+      // Create The Texture
+      glGenTextures( 2, &overlay_texture[0] );
+
+      // Load in texture 1
+      // Typical Texture Generation Using Data From The Bitmap 
+      glBindTexture( GL_TEXTURE_2D, overlay_texture[0] );
+
+      // Nearest Filtering
+      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+      //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      //glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+
+      // Generate The Texture
+      glTexImage2D( GL_TEXTURE_2D, 0, 3, ManeqImage[0]->w,
+		    ManeqImage[0]->h, 0, GL_BGR,
+		    GL_UNSIGNED_BYTE, ManeqImage[0]->pixels );
+     
+      //glClear( GL_COLOR_BUFFER_BIT );
+
+      // Load in texture 2
+      // Typical Texture Generation Using Data From The Bitmap 
+      glBindTexture( GL_TEXTURE_2D, overlay_texture[1] );
+
+      //glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+      //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+      //glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+      // Linear Filtering 
+      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+      glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+
+      
+      // Generate The Texture 
+      glTexImage2D( GL_TEXTURE_2D, 0, 3, ManeqImage[1]->w,
+		    ManeqImage[1]->h, 0, GL_BGR,
+		    GL_UNSIGNED_BYTE, ManeqImage[1]->pixels );
+
+      //glClear( GL_COLOR_BUFFER_BIT );
+      // Create The Texture
+      //glGenTextures( 2, &overlay_texture[0] );
+    }
+
+  if ( ManeqImage[0] )
+    SDL_FreeSurface( ManeqImage[0] );
+  if ( ManeqImage[1] )
+    SDL_FreeSurface( ManeqImage[1] );
+  */
+
+  int  i, j;
 
   /* declarations for libdc1394 */
   uint32_t numCameras = 0;
@@ -151,6 +225,7 @@ int main(int argc, char *argv[])
   char *lfb=NULL;
   dc1394video_frame_t * frames[MAX_CAMERAS];
   GLuint video_texture[2];			// This is a handle to our texture object
+
 
   float mid = 1.0;
   float stretch = 1.0;
@@ -284,7 +359,7 @@ int main(int argc, char *argv[])
   //screen = SDL_SetVideoMode(IMAGE_WIDTH, IMAGE_HEIGHT, 16, SDL_OPENGL|SDL_FULLSCREEN| SDL_HWACCEL ); 
   screen = SDL_SetVideoMode(width, height, 16, SDL_OPENGL|SDL_RESIZABLE| SDL_HWACCEL ); 
   if ( ! screen ) {
-    fprintf(stderr, "Couldn't set 300x300 GL video mode: %s\n", SDL_GetError());
+    fprintf(stderr, "Couldn't set 640x480 GL video mode: %s\n", SDL_GetError());
     SDL_Quit();
     exit(2);
   }
@@ -306,7 +381,10 @@ int main(int argc, char *argv[])
 
 
     if( drawVideo == 1)
-      drawTexture(screen->w, screen->h, device_width, device_height, stretch, video_texture, frames[0]->image, frames[1]->image);
+      {
+	drawTexture(screen->w, screen->h, device_width, device_height, stretch, video_texture, frames[0]->image, frames[1]->image, portion);
+	//drawOverlayTexture(screen->w, screen->h, device_width, device_height, stretch, overlay_texture);
+      }
     else
       drawBlank();
 
@@ -341,6 +419,14 @@ int main(int argc, char *argv[])
 	done = 1;
 	cleanup(numCameras,cameras,lfb);
 	break;
+      }
+      if(event.type == SDL_MOUSEBUTTONDOWN){
+	if(event.button.button == SDL_BUTTON_LEFT){
+	  //do_something();
+	  SDL_GetMouseState(&mouse_x, &mouse_y);
+	  portion = (float)mouse_y/((float)screen->h);
+	  printf("%f\n", portion);
+	}
       }
     }
 
@@ -395,6 +481,7 @@ int main(int argc, char *argv[])
   }
   // Clean up our textures
   glDeleteTextures( NUM_TEXTURES, &video_texture[0] );
+  //glDeleteTextures( 2, &overlay_texture[0] );
   initGLFont();
   done = 0;
 

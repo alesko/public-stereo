@@ -25,24 +25,23 @@ void initTexture(GLuint* tex, int num) //int w, int h)
 
   int i;
   
-  glClearColor (0.0, 0.0, 0.0, 0.0);
+  //glClearColor (0.0, 0.0, 0.0, 0.0);
   glShadeModel(GL_FLAT);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
   glDisable(GL_BLEND);
-  glDisable(GL_DEPTH_TEST);
+  //glDisable(GL_DEPTH_TEST);
   glDepthMask(GL_FALSE);
   glDisable(GL_CULL_FACE);
 
-  glEnable(GL_TEXTURE_2D);
+  //glEnable(GL_TEXTURE_2D);
 
   for( i = 0; i<2;i++){
     glGenTextures(1, &tex[i]);
     glBindTexture(GL_TEXTURE_2D, tex[i]);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    glClear( GL_COLOR_BUFFER_BIT );
-
+    //glClear( GL_COLOR_BUFFER_BIT );
   }
 
 }
@@ -68,21 +67,30 @@ void reshape(int width, int height)
   glTranslatef(0.0, 0.0, -40.0);
 }
 
-void left(GLint w, GLint h, float s)
+void left(GLint w, GLint h, float s, float portion)
 {
   GLfloat p0,p1;
+  GLfloat border = 0.0; // part of image
+  GLfloat borderpx = 0.0*w; // part of image
 
   if( s > 1.0)
     {
-      p0 = (s -1.0)/2.0;
-      p1 = 1.0 - (s -1.0)/2.0;
+      p0 = (s -1.0)/2.0 + border;
+      p1 = 1.0 - (s -1.0)/2.0 - border;
       // Draw a textured quad	
       glBegin(GL_QUADS);
-      glTexCoord2f(p0, 0.0f); glVertex2f(0.0f, 0.0f);
-      glTexCoord2f(p1, 0.0f); glVertex2f((GLfloat)w/2, 0.0f);
-      glTexCoord2f(p1, 1.0f); glVertex2f((GLfloat)w/2, (GLfloat)h );
-      glTexCoord2f(p0, 1.0f); glVertex2f(0.0f, (GLfloat)h );
+      glTexCoord2f(0.0f, 0.0f); glVertex2f((0.0f), 0.0f);
+      glTexCoord2f(1.0f, 0.0f); glVertex2f((GLfloat)w/2, 0.0f);
+      glTexCoord2f(1.0f, 1.0f); glVertex2f((GLfloat)w/2, (GLfloat)h );
+      glTexCoord2f(0.0f, 1.0f); glVertex2f((0.0f), (GLfloat)h );
       glEnd();
+      glBegin(GL_QUADS);
+      glTexCoord2f(p0, portion); glVertex2f(0.0f+borderpx, (GLfloat)(portion*h) );
+      glTexCoord2f(p1, portion); glVertex2f((GLfloat)(w/2-borderpx), (GLfloat)(portion*h) );
+      glTexCoord2f(p1, 1.0f); glVertex2f((GLfloat)(w/2-borderpx), (GLfloat)h );
+      glTexCoord2f(p0, 1.0f); glVertex2f(0.0f+borderpx, (GLfloat)h );
+      glEnd();
+
     }
   if( s <= 1.0)
     {
@@ -90,18 +98,43 @@ void left(GLint w, GLint h, float s)
       p0 = w/2.0-pix; 
       p1 = pix; 
       // Draw a textured quad
-      glBegin(GL_QUADS);	
+      /*glBegin(GL_QUADS);	
       glTexCoord2f(0.0f, 0.0f); glVertex2f((GLfloat)p0, 0.0f);
       glTexCoord2f(1.0f, 0.0f); glVertex2f((GLfloat)p1, 0.0f);
       glTexCoord2f(1.0f, 1.0f); glVertex2f((GLfloat)p1, (GLfloat)h );
       glTexCoord2f(0.0f, 1.0f); glVertex2f((GLfloat)p0, (GLfloat)h );
+      glEnd();*/
+      glBegin(GL_QUADS);	
+      glTexCoord2f(0.0f, 0.0f); glVertex2f(0.0f, 0.0f);
+      glTexCoord2f(1.0f, 0.0f); glVertex2f(w/2, 0.0f);
+      glTexCoord2f(1.0f, 1.0f); glVertex2f(w/2, (GLfloat)h );
+      glTexCoord2f(0.0f, 1.0f); glVertex2f(0.0f, (GLfloat)h );
       glEnd();
+
+      // Remove this segemet to remove black borders
+      glBegin(GL_QUADS); 
+      glColor3f(0.0,0.0,0.0);     
+      glVertex2f((0.0f), (portion*h));
+      glVertex2f((GLfloat)w/2, (portion*h));
+      glVertex2f((GLfloat)w/2, (GLfloat)h );
+      glVertex2f((0.0f), (GLfloat)h );
+      glColor3f(1.0,1.0,1.0);
+      glEnd();
+
+
+      glBegin(GL_QUADS);	
+      glTexCoord2f(0.0f, portion); glVertex2f((GLfloat)p0, (GLfloat)(portion*h));
+      glTexCoord2f(1.0f, portion); glVertex2f((GLfloat)p1, (GLfloat)(portion*h));
+      glTexCoord2f(1.0f, 1.0f); glVertex2f((GLfloat)p1, (GLfloat)h );
+      glTexCoord2f(0.0f, 1.0f); glVertex2f((GLfloat)p0, (GLfloat)h );
+      glEnd();
+
       
     }
   
 }
 
-void right(GLint w, GLint h, float s)
+void right(GLint w, GLint h, float s, float portion)
 {
   GLfloat p0,p1;
 
@@ -111,9 +144,15 @@ void right(GLint w, GLint h, float s)
       p1 = 1.0 - (s -1.0)/2.0;
       // Draw a textured quad	
       glBegin(GL_QUADS);
-      glTexCoord2f(p0, 0.0f); glVertex2f((GLfloat)w/2, 0.0f);
-      glTexCoord2f(p1, 0.0f); glVertex2f((GLfloat)w, 0.0f);
-      glTexCoord2f(p1, 1.0f); glVertex2f((GLfloat)w, (GLfloat)h );
+      glTexCoord2f(0.0, 0.0f); glVertex2f((GLfloat)w/2, 0.0f);
+      glTexCoord2f(1.0, 0.0f); glVertex2f((GLfloat)w, 0.0f);
+      glTexCoord2f(1.0, 1.0f); glVertex2f((GLfloat)w, (GLfloat)h );
+      glTexCoord2f(0.0, 1.0f); glVertex2f((GLfloat)w/2, (GLfloat)h );
+      glEnd();
+      glBegin(GL_QUADS);
+      glTexCoord2f(p0, portion); glVertex2f((GLfloat)w/2, (GLfloat)(h*portion));
+      glTexCoord2f(p1, portion); glVertex2f((GLfloat)w, (GLfloat)(h*portion));
+      glTexCoord2f(p1, 1.0f); glVertex2f((GLfloat)w,  (GLfloat)h );
       glTexCoord2f(p0, 1.0f); glVertex2f((GLfloat)w/2, (GLfloat)h );
       glEnd();
     }
@@ -123,10 +162,33 @@ void right(GLint w, GLint h, float s)
       p0 = (GLfloat)w/2+w/2.0-pix; 
       p1 = (GLfloat)w/2+pix; 
       // Draw a textured quad
-      glBegin(GL_QUADS);	
+      /*glBegin(GL_QUADS);	
       glTexCoord2f(0.0f, 0.0f); glVertex2f((GLfloat)p0, 0.0f);
       glTexCoord2f(1.0f, 0.0f); glVertex2f((GLfloat)p1, 0.0f);
       glTexCoord2f(1.0f, 1.0f); glVertex2f((GLfloat)p1, (GLfloat)h );
+      glTexCoord2f(0.0f, 1.0f); glVertex2f((GLfloat)p0, (GLfloat)h );
+      glEnd();*/
+      glBegin(GL_QUADS);	
+      glTexCoord2f(0.0f, 0.0f); glVertex2f((GLfloat)w/2, 0.0f);
+      glTexCoord2f(1.0f, 0.0f); glVertex2f((GLfloat)w, 0.0f);
+      glTexCoord2f(1.0f, 1.0f); glVertex2f((GLfloat)w, (GLfloat)h );
+      glTexCoord2f(0.0f, 1.0f); glVertex2f((GLfloat)w/2, (GLfloat)h );
+      glEnd();
+
+      // Remove this segemet to remove black borders
+      glBegin(GL_QUADS); 
+      glColor3f(0.0,0.0,0.0);     
+      glVertex2f((GLfloat)w/2, (portion*h));
+      glVertex2f((GLfloat)w, (portion*h));
+      glVertex2f((GLfloat)w, (GLfloat)h );
+      glVertex2f((GLfloat)w/2, (GLfloat)h );
+      glColor3f(1.0,1.0,1.0);
+      glEnd();
+
+      glBegin(GL_QUADS);	
+      glTexCoord2f(0.0f, portion); glVertex2f((GLfloat)p0, (GLfloat)(h*portion));
+      glTexCoord2f(1.0f, portion); glVertex2f((GLfloat)p1, (GLfloat)(h*portion));
+      glTexCoord2f(1.0f, 1.0f); glVertex2f((GLfloat)p1,  (GLfloat)h);
       glTexCoord2f(0.0f, 1.0f); glVertex2f((GLfloat)p0, (GLfloat)h );
       glEnd();
     }
@@ -134,11 +196,11 @@ void right(GLint w, GLint h, float s)
 
 
 //static 
-void drawTexture(int width, int height, int device_width, int device_height,float s, GLint* tex, unsigned char* data_left, unsigned char* data_right )
+void drawTexture(int width, int height, int device_width, int device_height,float s, GLuint* tex, unsigned char* data_left, unsigned char* data_right, float portion)
 {
-  int i;
-  int frame_ready = 1;
-  GLfloat p0,p1;
+  //int i;
+  //int frame_ready = 1;
+  //GLfloat p0,p1;
 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glEnable(GL_TEXTURE_2D);
@@ -154,13 +216,35 @@ void drawTexture(int width, int height, int device_width, int device_height,floa
   
   glBindTexture( GL_TEXTURE_2D, tex[0] );
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, device_width,device_height,0, GL_RGB, GL_UNSIGNED_BYTE, data_left); //frames[i]->image);
-  left(width,height, s);
+  left(width,height, s, portion);
   glBindTexture( GL_TEXTURE_2D, tex[1] );
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, device_width,device_height,0, GL_RGB, GL_UNSIGNED_BYTE, data_right); //frames[i]->image);
-  right(width,height, s);
-  
+  right(width,height, s, portion);
 
 }
+
+void drawOverlayTexture(int width, int height, int device_width, int device_height, float s, GLuint* tex )
+{
+
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+  glEnable(GL_TEXTURE_2D);
+  
+  // Set Projection Matrix
+  glMatrixMode (GL_PROJECTION);
+  glLoadIdentity();
+  glOrtho(0.0f, width, height, 0.0f, -1.0f, 1.0f);
+  
+  // Switch to Model View Matrix
+  glMatrixMode(GL_MODELVIEW);
+  glLoadIdentity();
+  
+  glBindTexture( GL_TEXTURE_2D, tex[0] );
+  left(width,height, s, 0.0);
+  glBindTexture( GL_TEXTURE_2D, tex[1] );
+  right(width,height, s, 0.0);
+
+}
+
 
 void drawBlank(void)
 {

@@ -34,6 +34,9 @@ all: avt_singleview.c dc1394_multiview.c
 gl: stereoviewGL.c tools.c
 	$(CC) -o stereoviewGL questionare.c tools.c stereoviewGL.c -I. $(LIBFLAGS) $(SDLFLAGS)
 
+tex: testtex.c tools.c
+	$(CC) -o testtex questionare.c tools.c testtex.c -I. $(LIBFLAGS) $(SDLFLAGS)
+
 text: glutfonts.c
 	$(CC) -o glutfonts glutfonts.c -I. $(LIBFLAGS) $(SDLFLAGS)
 
