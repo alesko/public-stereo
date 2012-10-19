@@ -22,10 +22,6 @@ NV = /usr/local/cuda/bin/nvcc
 #	$(CC) -o test test.c camera.c definitions.c -I. $(LIBFLAGS)
 #	$(CC) -o testSDL testSDL.c camera.c definitions.c -I. $(LIBFLAGS) $(SDLFLAGS)
 
-cuda: conv.cu
-	$(NV) -c *cu
-	$(CC) *o -o cuda_multiview $(LIBFLAGS)
-
 all: avt_singleview.c dc1394_multiview.c 
 #	$(CC) -o test test.c camera.c definitions.c -I. $(LIBFLAGS)
 	$(CC) -o avt_singleview-new avt_singleview.c -I. $(LIBFLAGS)
@@ -40,8 +36,6 @@ tex: testtex.c tools.c
 text: glutfonts.c
 	$(CC) -o glutfonts glutfonts.c -I. $(LIBFLAGS) $(SDLFLAGS)
 
-http: testmicrohttpd.c
-	$(CC) -o testmicrohttpd testmicrohttpd.c -I. $(LIBFLAGS)
 
 seed: testseed.c
 	$(CC) -o testseed testseed.c -I. $(LIBFLAGS)
